@@ -1,0 +1,7 @@
+# O catalogo e as capas sao artefatos binarios gerados por ferramentas/.
+# Marca-los evita que o git tente calcular diffs de texto neles.
+*.db.gz  binary
+*.webp   binary
+*.apk    binary
+*.png    binary
+*.jpg    binary
