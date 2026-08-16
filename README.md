@@ -195,6 +195,32 @@ Android 36.1, x86_64:
   2026). Atualizá-lo exige regerar o banco a partir de uma instalação recente do
   programa, ou passar a consumir `json_db` direto.
 
+## Publicar e compartilhar
+
+O repositório é privado. Para enviar ao GitHub e criar a release com os APKs:
+
+```bash
+# uma vez, no seu terminal (abre o navegador)
+"/c/Program Files/GitHub CLI/gh.exe" auth login
+
+# depois, na raiz do projeto
+powershell -ExecutionPolicy Bypass -File publicar.ps1
+```
+
+O script cria o repositório privado, envia os commits e publica a release
+`v1.0.0` com os três APKs por arquitetura.
+
+**Atenção ao compartilhar:** arquivos de release herdam a visibilidade do
+repositório. Num repositório privado, quem receber o link e não tiver acesso vê
+404. Para o link funcionar, adicione a pessoa como colaboradora:
+
+```bash
+gh repo add-collaborator louvorja USUARIO
+```
+
+Para distribuir a um grupo maior, é mais simples enviar o APK direto (WhatsApp,
+Drive) do que abrir o repositório.
+
 ## Licenciamento
 
 Os MP3, as capas e as traduções bíblicas são de terceiros, e o catálogo deriva do
