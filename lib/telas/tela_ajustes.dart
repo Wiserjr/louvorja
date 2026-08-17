@@ -373,12 +373,7 @@ class _TelaAjustesState extends State<TelaAjustes> {
             // Dizer onde está gravando importa: quando o externo não aceita
             // escrita, o app cai para o interno silenciosamente, e o usuário
             // merece saber por que o espaço some de outro lugar.
-            subtitle: Text(
-              [
-                _mb(_bytesBaixados),
-                ?_ondeGrava,
-              ].join(' · '),
-            ),
+            subtitle: Text([_mb(_bytesBaixados), ?_ondeGrava].join(' · ')),
             trailing: TextButton(
               onPressed: _bytesBaixados == 0 ? null : _limpar,
               child: const Text('Apagar'),

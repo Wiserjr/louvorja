@@ -61,6 +61,37 @@ python ferramentas/empacotar.py --albuns todos --simular
 Depois copie a pasta para o celular e aponte para ela em **Ajustes → Pasta das
 músicas**. Álbuns adicionados depois são reconhecidos sem atualizar o app.
 
+## Acessibilidade e compartilhamento
+
+**Ouvir a Bíblia.** O leitor lê o capítulo em voz alta pela síntese do próprio
+Android, versículo a versículo, destacando na tela o que está sendo lido. A
+alternativa seria uma Bíblia gravada, mas não existe nenhuma no acervo e as de
+mercado são licenciadas — a síntese resolve o problema real e resolve para as
+**dez traduções**, não só para a que alguém gravou. Com versículos marcados, a
+leitura começa por eles. A velocidade é ajustável, e o recurso só aparece se
+houver voz em português instalada.
+
+**Tamanho da letra** ajustável de 13 a 31 — o mesmo requisito de acessibilidade
+visto pelo outro ângulo.
+
+**Busca no texto bíblico**, sobre os 311.045 versículos.
+
+**Compartilhar versículos como imagem.** O cartão é montado sobre uma das 21
+fotos que vieram do próprio acervo (o grupo `generico_*` dos fundos de projeção,
+recortado em quadrado e etiquetado por tema). A escolha da imagem segue o
+**assunto do versículo**: palavras como "criou", "céus" e "terra" puxam um fundo
+de criação; "luz", "paz", "força", "amor", "caminho", "louvor" e "cuidado" têm
+cada um o seu conjunto. É heurística por palavra-chave, não classificação
+semântica — e por isso um toque troca a imagem, que é a garantia real de que o
+cartão fica do jeito de quem envia.
+
+O cartão é capturado por `RepaintBoundary`, então o PNG é exatamente o que
+apareceu na tela. Sai sempre em 1080×1080, qualquer que seja a densidade do
+aparelho.
+
+**Compartilhar como texto** também, com a referência e a sigla da tradução. E no
+player, o título ou a letra inteira da música.
+
 ## Busca
 
 O campo no topo da aba Álbuns varre o acervo inteiro: devolve **álbuns e

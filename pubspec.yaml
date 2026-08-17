@@ -43,6 +43,8 @@ dependencies:
   saf_util: ^3.1.0
   saf_stream: ^4.0.1
   youtube_player_iframe: ^6.0.2
+  flutter_tts: ^4.2.5
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +71,7 @@ flutter:
   assets:
     - assets/louvorja_pt.db.gz
     - assets/capas/
+    - assets/fundos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

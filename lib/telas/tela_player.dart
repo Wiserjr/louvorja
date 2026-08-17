@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:saf_stream/saf_stream.dart';
 
+import '../dados/compartilhar.dart';
 import '../dados/download.dart';
 import '../dados/midia.dart';
 
@@ -108,6 +109,41 @@ class _TelaPlayerState extends State<TelaPlayer> {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Compartilhar',
+            icon: const Icon(Icons.share_outlined),
+            onSelected: (opcao) {
+              if (opcao == 'titulo') {
+                Compartilhar.instancia.texto(
+                  Compartilhar.textoDaMusica(
+                    widget.musica,
+                    album: widget.nomeAlbum.isEmpty ? null : widget.nomeAlbum,
+                  ),
+                );
+              } else {
+                Compartilhar.instancia.texto(
+                  Compartilhar.textoDaLetra(
+                    widget.musica,
+                    _slides,
+                    album: widget.nomeAlbum.isEmpty ? null : widget.nomeAlbum,
+                  ),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'titulo',
+                child: Text('Compartilhar o título'),
+              ),
+              // Só oferece a letra quando ela existe: um item que produz texto
+              // vazio é pior do que item nenhum.
+              if (_slides.any((s) => s.texto.trim().isNotEmpty))
+                const PopupMenuItem(
+                  value: 'letra',
+                  child: Text('Compartilhar a letra'),
+                ),
+            ],
+          ),
           if (widget.musica.audioPlayback != null)
             IconButton(
               tooltip: _playback ? 'Ouvindo o playback' : 'Ouvindo a cantada',
