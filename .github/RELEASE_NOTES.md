@@ -14,6 +14,20 @@ preciso permitir a instalação de "fontes desconhecidas" para este app.
 
 Na dúvida, use o **arm64-v8a**.
 
+## Para quem tem dificuldade de ler
+
+- **Ouvir a Bíblia**: o capítulo é lido em voz alta, com o versículo atual
+  destacado e velocidade ajustável. Funciona nas dez traduções. Precisa da voz
+  em português instalada no aparelho (Configurações → Idiomas → Conversão de
+  texto em voz).
+- **Letra maior**: botões A− e A+ no topo do leitor.
+
+## Compartilhar
+
+- **Versículo como imagem**: cartão quadrado sobre uma foto escolhida pelo tema
+  do texto — um toque troca a imagem.
+- **Como texto**: versículo, passagem, título da música ou a letra completa.
+
 ## O que vem dentro
 
 - 75 álbuns em 9 categorias, com o ano no subtítulo
@@ -21,6 +35,7 @@ Na dúvida, use o **arm64-v8a**.
 - 59.520 linhas de letra com tempo, sincronizadas com o áudio
 - Bíblia completa em 10 traduções (311.045 versículos)
 - Coletâneas on-line: 5 canais, 16 playlists, 1.150 vídeos
+- Busca no texto bíblico e busca global por álbuns e músicas
 
 O catálogo inteiro cabe no APK. O áudio, não: são quase 14 GB.
 
