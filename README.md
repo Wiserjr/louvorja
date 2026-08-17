@@ -64,12 +64,21 @@ músicas**. Álbuns adicionados depois são reconhecidos sem atualizar o app.
 ## Acessibilidade e compartilhamento
 
 **Ouvir a Bíblia.** O leitor lê o capítulo em voz alta pela síntese do próprio
-Android, versículo a versículo, destacando na tela o que está sendo lido. A
-alternativa seria uma Bíblia gravada, mas não existe nenhuma no acervo e as de
-mercado são licenciadas — a síntese resolve o problema real e resolve para as
-**dez traduções**, não só para a que alguém gravou. Com versículos marcados, a
-leitura começa por eles. A velocidade é ajustável, e o recurso só aparece se
-houver voz em português instalada.
+Android, destacando na tela o trecho corrente. Vale para as **dez traduções** —
+uma Bíblia gravada serviria apenas a versão gravada, e as de mercado são
+licenciadas e não podem ser embutidas aqui.
+
+A qualidade depende quase inteiramente de **qual voz** o aparelho usa, e o padrão
+do sistema costuma ser o pior dos instalados. Por isso há uma tela própria
+(*Ajustes → Voz da leitura*, ou o ícone na Bíblia) para escolher motor e voz, com
+um botão que fala uma frase para comparar. As vozes de **rede** são sintetizadas
+pelo Google e soam bem mais naturais, mas exigem internet; as **offline** rodam
+no aparelho. A lista põe pt-BR antes de pt-PT e as de rede primeiro.
+
+Duas outras decisões afetam o resultado: o número do versículo **não** é falado
+por padrão (dizer "um ponto" antes de cada frase quebra a leitura, e há um
+interruptor para quem quiser), e os versículos são emendados em blocos de ~350
+caracteres para as frases fluírem em vez de pararem a cada ponto final.
 
 **Tamanho da letra** ajustável de 13 a 31 — o mesmo requisito de acessibilidade
 visto pelo outro ângulo.
@@ -288,6 +297,17 @@ gh repo add-collaborator louvorja USUARIO
 
 Para distribuir a um grupo maior, é mais simples enviar o APK direto (WhatsApp,
 Drive) do que abrir o repositório.
+
+## Áudio bíblico gravado
+
+Não é possível embutir aqui as gravações do YouVersion/bible.com nem de apps
+semelhantes: são obras licenciadas de editoras, e os termos de uso vedam
+extração e redistribuição.
+
+A via legítima, se um dia fizer sentido, é a **Bible Brain** da Faith Comes By
+Hearing — API gratuita para uso não comercial, com áudio bíblico em mais de dois
+mil idiomas, inclusive português. Exige registro e uma chave de API, que teria de
+ser configurada pelo usuário do mesmo modo que a URL do acervo.
 
 ## Licenciamento
 

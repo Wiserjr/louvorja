@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../dados/download.dart';
 import '../dados/sincronizacao.dart';
 import 'tela_downloads.dart';
+import 'tela_voz.dart';
 import '../dados/midia.dart';
 
 class TelaAjustes extends StatefulWidget {
@@ -241,6 +242,18 @@ class _TelaAjustesState extends State<TelaAjustes> {
               leading: const Icon(Icons.check_circle_outline),
               title: Text(_resultadoSync!),
             ),
+          const Divider(height: 32),
+          ListTile(
+            leading: const Icon(Icons.record_voice_over_outlined),
+            title: const Text('Voz da leitura bíblica'),
+            subtitle: const Text(
+              'Motor, voz e velocidade da leitura em voz alta',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const TelaVoz())),
+          ),
           const Divider(height: 32),
           const _Titulo('Fonte principal: pasta copiada'),
           ListTile(

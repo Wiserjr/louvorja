@@ -5,6 +5,7 @@ import '../dados/leitor_voz.dart';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
 import 'cartao_versiculo.dart';
+import 'tela_voz.dart';
 
 /// Leitor bíblico: navegação por livro e capítulo, busca no texto, leitura em
 /// voz alta e compartilhamento.
@@ -99,6 +100,15 @@ class _TelaBibliaState extends State<TelaBiblia> {
           ? null
           : _repo.buscarNaBiblia(_busca, _idVersao!);
     });
+  }
+
+  Future<void> _abrirVoz() async {
+    await _leitor.parar();
+    if (!mounted) return;
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const TelaVoz()));
+    final v = await _leitor.temVozPortuguesa();
+    if (mounted) setState(() => _temVoz = v);
   }
 
   Future<void> _alternarLeitura() async {
@@ -322,15 +332,27 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            if (_temVoz)
-              ValueListenableBuilder<bool>(
-                valueListenable: _leitor.lendo,
-                builder: (context, lendo, _) => IconButton(
-                  tooltip: lendo ? 'Parar a leitura' : 'Ouvir o capítulo',
-                  onPressed: _alternarLeitura,
-                  icon: Icon(lendo ? Icons.stop_circle : Icons.volume_up),
+            ValueListenableBuilder<bool>(
+              valueListenable: _leitor.lendo,
+              builder: (context, lendo, _) => IconButton(
+                tooltip: lendo ? 'Parar a leitura' : 'Ouvir o capítulo',
+                // Toque longo abre a escolha de voz: é lá que se resolve o som
+                // ruim, e ninguém procuraria isso nos Ajustes gerais.
+                onPressed: _temVoz ? _alternarLeitura : _abrirVoz,
+                icon: Icon(
+                  lendo
+                      ? Icons.stop_circle
+                      : _temVoz
+                      ? Icons.volume_up
+                      : Icons.volume_off,
                 ),
               ),
+            ),
+            IconButton(
+              tooltip: 'Voz da leitura',
+              onPressed: _abrirVoz,
+              icon: const Icon(Icons.record_voice_over_outlined),
+            ),
             IconButton(
               onPressed: _capitulo > 1 ? () => _mudarCapitulo(-1) : null,
               icon: const Icon(Icons.chevron_left),
@@ -343,12 +365,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ),
           ],
         ),
-        if (_temVoz)
-          ValueListenableBuilder<bool>(
-            valueListenable: _leitor.lendo,
-            builder: (context, lendo, _) =>
-                lendo ? _controleVelocidade() : const SizedBox.shrink(),
-          ),
         Expanded(
           child: FutureBuilder<List<Versiculo>>(
             future: _repo.capitulo(_idLivro!, _capitulo, _idVersao!),
@@ -380,28 +396,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
       _selecionados.clear();
     });
   }
-
-  Widget _controleVelocidade() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: [
-        const Icon(Icons.speed, size: 18),
-        Expanded(
-          child: Slider(
-            value: _leitor.velocidade,
-            min: 0.25,
-            max: 1,
-            divisions: 6,
-            label: '${(_leitor.velocidade * 2).toStringAsFixed(1)}×',
-            onChanged: (v) async {
-              await _leitor.definirVelocidade(v);
-              setState(() {});
-            },
-          ),
-        ),
-      ],
-    ),
-  );
 
   Widget _verso(Versiculo v, bool sendoLido) {
     final marcado = _selecionados.contains(v.numero);
