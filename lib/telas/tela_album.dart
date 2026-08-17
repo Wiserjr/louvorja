@@ -82,12 +82,13 @@ class _TelaAlbumState extends State<TelaAlbum> {
       }
     } on DownloadCancelado {
       if (mounted) setState(() => _baixando.remove(m.id));
-    } on SemArquivoNoServidor {
+    } on FalhaDownload catch (e) {
+      // Mostra o motivo em vez de um "falhou" genérico: rede, servidor e
+      // ausência do arquivo pedem reações diferentes de quem está usando.
       if (mounted) {
         setState(() => _baixando.remove(m.id));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('O servidor não tem áudio para "${m.nome}".')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('${m.nome}: ${e.motivo}')));
       }
     } catch (e) {
       if (mounted) {

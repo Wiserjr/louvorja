@@ -33,7 +33,17 @@ class Download {
   /// Host do antigo servidor de arquivos, desativado depois de 2024.
   static const _hostObsoleto = 'arquivos.louvorja.com.br';
 
-  final _http = HttpClient()..connectionTimeout = const Duration(seconds: 20);
+  /// Identifica o app nas requisições.
+  ///
+  /// Sem isto o cliente vai como `Dart/3.x (dart:io)`, anônimo. Proteções de
+  /// servidor tratam clientes genéricos com mais rigor, e quem mantém o acervo
+  /// merece saber quem está batendo na porta.
+  static const identificacao = 'LouvorJA-Android/1.0';
+
+  final _http = HttpClient()
+    ..connectionTimeout = const Duration(seconds: 20)
+    ..idleTimeout = const Duration(seconds: 30)
+    ..userAgent = identificacao;
 
   /// URL base efetiva.
   ///
@@ -57,15 +67,65 @@ class Download {
     await prefs.setString(chaveUrlBase, v);
   }
 
-  /// Pasta onde a mídia baixada é gravada. Diretório privado do app: não exige
-  /// permissão alguma e é limpo na desinstalação.
+  Directory? _pasta;
+
+  /// Pasta onde a mídia baixada é gravada.
+  ///
+  /// A escolha é por **verificação, não por suposição**. O candidato natural é
+  /// o diretório externo do app (`Android/data/<pacote>/files`), que cabe mais
+  /// e não exige permissão — mas ele pertence ao UID da instalação, e uma
+  /// desinstalação seguida de nova instalação deixa a pasta antiga com o UID
+  /// anterior. O novo processo então recebe `Permission denied` até para checar
+  /// se ela existe, e todo download falha.
+  ///
+  /// Por isso: tenta o externo, **escreve um arquivo de prova** e, se qualquer
+  /// etapa falhar, cai para o diretório interno, que é sempre acessível.
   Future<Directory> get pasta async {
-    final base =
-        await getExternalStorageDirectory() ??
-        await getApplicationSupportDirectory();
-    final d = Directory(p.join(base.path, 'midia'));
-    if (!await d.exists()) await d.create(recursive: true);
-    return d;
+    final cache = _pasta;
+    if (cache != null) return cache;
+
+    for (final base in [
+      await _externoSeguro(),
+      await getApplicationSupportDirectory(),
+    ]) {
+      if (base == null) continue;
+      final d = Directory(p.join(base.path, 'midia'));
+      if (await _utilizavel(d)) return _pasta = d;
+    }
+    // Último recurso: devolve o interno mesmo sem prova, para o erro aparecer
+    // no lugar certo em vez de aqui.
+    return _pasta = Directory(
+      p.join((await getApplicationSupportDirectory()).path, 'midia'),
+    );
+  }
+
+  Future<Directory?> _externoSeguro() async {
+    try {
+      return await getExternalStorageDirectory();
+    } on Exception {
+      return null;
+    }
+  }
+
+  /// Cria a pasta e grava um arquivo de prova. É a única forma honesta de saber
+  /// se dá para escrever ali — `exists()` já falha quando o UID mudou.
+  Future<bool> _utilizavel(Directory d) async {
+    try {
+      if (!await d.exists()) await d.create(recursive: true);
+      final prova = File(p.join(d.path, '.escrita'));
+      await prova.writeAsString('ok', flush: true);
+      await prova.delete();
+      return true;
+    } on Exception {
+      return false;
+    }
+  }
+
+  /// Onde a mídia está sendo gravada, para mostrar nos Ajustes.
+  Future<String> get descricaoDaPasta async {
+    final d = await pasta;
+    final externa = d.path.contains('/Android/data/');
+    return externa ? 'Armazenamento externo do app' : 'Armazenamento interno';
   }
 
   Future<File> arquivoDe(String caminhoRelativo) async => File(
@@ -146,15 +206,30 @@ class Download {
     CancelToken? cancelamento,
   }) async {
     final destino = await arquivoDe(caminhoRelativoLocal);
-    if (await destino.exists()) return destino;
+    try {
+      if (await destino.exists()) return destino;
+    } on FileSystemException catch (e) {
+      throw FalhaDownload.doSistemaDeArquivos(e);
+    }
 
     final base = await urlBase;
     var url = _urlDe(base, caminhoRelativoLocal);
 
-    await destino.parent.create(recursive: true);
+    try {
+      await destino.parent.create(recursive: true);
+    } on FileSystemException catch (e) {
+      throw FalhaDownload.doSistemaDeArquivos(e);
+    }
     final parcial = File('${destino.path}.parcial');
 
-    var resp = await (await _http.getUrl(url)).close();
+    HttpClientResponse resp;
+    try {
+      resp = await (await _http.getUrl(url)).close();
+    } on SocketException catch (e) {
+      throw FalhaDownload.rede(e.osError?.message ?? e.message);
+    } on HttpException catch (e) {
+      throw FalhaDownload.rede(e.message);
+    }
 
     // Plano B: o caminho do catálogo não bateu com o do servidor. Pergunta pelo
     // id, que é estável, e tenta de novo.
@@ -164,13 +239,14 @@ class Download {
         idMusica,
         instrumental: instrumental,
       );
-      if (doServidor == null) throw const SemArquivoNoServidor();
+      if (doServidor == null) throw FalhaDownload.semArquivo();
       url = _urlDe(base, doServidor);
       resp = await (await _http.getUrl(url)).close();
     }
 
     if (resp.statusCode != HttpStatus.ok) {
-      throw HttpException('HTTP ${resp.statusCode}', uri: url);
+      await resp.drain<void>();
+      throw FalhaDownload.http(resp.statusCode);
     }
 
     final total = resp.contentLength;
@@ -184,10 +260,19 @@ class Download {
         aoProgredir?.call(recebidos, total);
       }
       await saida.flush();
-    } catch (_) {
+    } on DownloadCancelado {
       await saida.close();
       if (await parcial.exists()) await parcial.delete();
       rethrow;
+    } on FileSystemException catch (e) {
+      await saida.close();
+      throw FalhaDownload.doSistemaDeArquivos(e);
+    } catch (e) {
+      await saida.close();
+      if (await parcial.exists()) await parcial.delete();
+      // Conexão cortada no meio do corpo é a falha mais comum de um lote
+      // grande — e exatamente a que vale tentar de novo.
+      throw FalhaDownload.rede('$e');
     }
     await saida.close();
 
@@ -242,7 +327,13 @@ class Download {
 
   Future<void> limparTudo() async {
     final d = await pasta;
-    if (await d.exists()) await d.delete(recursive: true);
+    try {
+      if (await d.exists()) await d.delete(recursive: true);
+    } on FileSystemException {
+      // Pasta inacessível (UID antigo): esquecer a escolha faz a próxima
+      // consulta refazer a verificação e migrar para o armazenamento interno.
+    }
+    _pasta = null;
   }
 }
 
@@ -269,8 +360,73 @@ class DownloadCancelado implements Exception {
   String toString() => 'Download cancelado';
 }
 
-class SemArquivoNoServidor implements Exception {
-  const SemArquivoNoServidor();
+/// Falha de um download, com motivo legível e o dado que decide o comportamento
+/// da fila: vale tentar de novo?
+///
+/// Guardar o motivo é o ponto. A versão anterior fazia `catch (_)` e apenas
+/// contava falhas — o usuário via "1252 falharam" sem nenhuma pista, e nem o log
+/// dizia se tinha sido rede, servidor ou disco.
+class FalhaDownload implements Exception {
+  const FalhaDownload({
+    required this.motivo,
+    required this.temporaria,
+    this.httpStatus,
+  });
+
+  /// Conexão caiu, tempo esgotado, DNS falhou. Quase sempre passa na segunda.
+  factory FalhaDownload.rede(String detalhe) =>
+      FalhaDownload(motivo: 'Rede: $detalhe', temporaria: true);
+
+  /// Resposta HTTP inesperada.
+  ///
+  /// 429 e 5xx são o servidor pedindo calma — temporários por definição. 403 e
+  /// 406 costumam vir de proteção contra excesso de requisições, e também
+  /// passam depois de uma pausa. O resto é definitivo.
+  factory FalhaDownload.http(int status) => FalhaDownload(
+    motivo: 'Servidor respondeu HTTP $status',
+    httpStatus: status,
+    temporaria:
+        status == 429 || status == 403 || status == 406 || status >= 500,
+  );
+
+  factory FalhaDownload.semArquivo() => const FalhaDownload(
+    motivo: 'O servidor não tem áudio para esta música',
+    temporaria: false,
+  );
+
+  factory FalhaDownload.disco(String detalhe) =>
+      FalhaDownload(motivo: 'Armazenamento: $detalhe', temporaria: false);
+
+  /// Traduz um erro do sistema de arquivos para linguagem de gente.
+  ///
+  /// Os dois casos que aparecem de verdade num lote grande: espaço esgotado e
+  /// permissão negada na pasta do app — e nenhum dos dois melhora com
+  /// retentativa, por isso entram como definitivos.
+  factory FalhaDownload.doSistemaDeArquivos(FileSystemException e) {
+    final errno = e.osError?.errorCode;
+    if (errno == 28) {
+      return FalhaDownload.disco('sem espaço no aparelho');
+    }
+    if (errno == 13 || errno == 1) {
+      return FalhaDownload.disco(
+        'a pasta de destino não aceita gravação. Em Ajustes, use "Apagar" '
+        'na mídia baixada para o app recriar a pasta.',
+      );
+    }
+    return FalhaDownload.disco(e.osError?.message ?? e.message);
+  }
+
+  final String motivo;
+  final bool temporaria;
+  final int? httpStatus;
+
+  /// Sinal de que o servidor está limitando o ritmo e a fila deve desacelerar.
+  bool get pedeCalma {
+    final s = httpStatus;
+    if (s == null) return false;
+    return s == 429 || s == 403 || s == 406 || s >= 500;
+  }
+
   @override
-  String toString() => 'O servidor não tem áudio para esta música';
+  String toString() => motivo;
 }

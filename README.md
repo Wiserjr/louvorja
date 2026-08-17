@@ -87,9 +87,46 @@ todo o acervo. O tamanho é estimado antes de começar e conta **apenas o que
 falta** — quem já copiou metade à mão não deve ver 8 GB anunciados.
 
 A fila vive fora das telas (`FilaDownload`), então sair da tela não interrompe um
-lote de centenas de arquivos. O download é sequencial de propósito: em paralelo,
-doze barras andariam devagar ao mesmo tempo e o conjunto pareceria travado, além
-de sobrecarregar quem hospeda o acervo.
+lote de centenas de arquivos.
+
+Três decisões moldam o comportamento:
+
+- **Uma por vez, com pausa entre elas.** Em paralelo, doze barras andariam
+  devagar ao mesmo tempo e o conjunto pareceria travado — além de multiplicar a
+  carga no servidor de quem hospeda o acervo. O app também se identifica no
+  `User-Agent` em vez de ir anônimo como `Dart/3.x`.
+- **Retentativa com espera crescente** (2 s, 6 s, 15 s) para falhas
+  *temporárias*. Num lote de 1.600 arquivos, conexão cortada não é exceção, é
+  rotina. Erros definitivos — permissão, arquivo ausente no servidor — não são
+  repetidos, porque insistir só perderia tempo.
+- **Motivo registrado, sempre.** Cada falha guarda o porquê, e a tela agrupa por
+  causa: "1.200 × Rede: connection closed" informa muito mais que mil linhas
+  iguais. Sucessos e falhas são contadores separados — somá-los produzia
+  "1635 de 1635" ao lado de "1252 falharam".
+
+### O destino é escolhido por verificação
+
+`getExternalStorageDirectory()` aponta para `Android/data/<pacote>/files`, que
+pertence ao **UID da instalação**. Uma desinstalação seguida de nova instalação
+deixa a pasta antiga com o UID anterior, e o novo processo recebe
+`Permission denied` até para checar se ela existe — todo download falha.
+
+Por isso o app tenta o externo, **grava um arquivo de prova** e, se qualquer
+etapa falhar, cai para o armazenamento interno. Os Ajustes mostram qual está em
+uso, porque uma troca silenciosa faria o espaço sumir de outro lugar.
+
+### Reconhecimento da pasta copiada
+
+Cada arquivo entra no índice com **duas chaves**: o caminho completo relativo à
+pasta escolhida e o par `pasta/arquivo`. A segunda existe porque o
+reconhecimento não pode depender de qual nível você apontou no seletor — escolher
+a pasta que contém `musics/pt/...` ou a própria `pt` mudaria todas as chaves. O
+sufixo casa nos dois casos, e também quando parte da mídia foi copiada com o
+layout antigo (`musicas/Álbum/Faixa.mp3`).
+
+Os Ajustes mostram quantas faixas do catálogo a pasta cobre, e um botão refaz a
+varredura depois de você copiar mais álbuns — o índice é um retrato do momento da
+escolha, não um observador do sistema de arquivos.
 
 ## Atualização automática pela API
 

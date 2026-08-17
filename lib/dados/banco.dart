@@ -93,16 +93,16 @@ class Banco {
     final dir = await getApplicationSupportDirectory();
     return openDatabase(
       p.join(dir.path, 'usuario.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, _) async {
         // Índice de mídia: caminho relativo do catálogo -> URI SAF no aparelho.
         // Percorrer a árvore SAF a cada reprodução seria lento; a varredura
         // acontece uma vez, quando o usuário escolhe a pasta.
         await db.execute('''
           CREATE TABLE midia (
-            caminho TEXT PRIMARY KEY,
-            uri     TEXT NOT NULL,
-            bytes   INTEGER NOT NULL DEFAULT 0
+            chave TEXT PRIMARY KEY,
+            uri   TEXT NOT NULL,
+            bytes INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -111,6 +111,20 @@ class Banco {
             criado_em INTEGER NOT NULL
           )
         ''');
+      },
+      onUpgrade: (db, de, para) async {
+        if (de < 2) {
+          // O índice de mídia é só cache: recriar é mais simples e mais seguro
+          // do que migrar, e a próxima varredura o refaz com as duas chaves.
+          await db.execute('DROP TABLE IF EXISTS midia');
+          await db.execute('''
+            CREATE TABLE midia (
+              chave TEXT PRIMARY KEY,
+              uri   TEXT NOT NULL,
+              bytes INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+        }
       },
     );
   }

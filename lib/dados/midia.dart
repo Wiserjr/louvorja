@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'banco.dart';
 import 'download.dart';
+import 'repositorio.dart';
 
 /// Resolve os caminhos relativos do catálogo para URIs de arquivo no aparelho.
 ///
@@ -13,6 +14,13 @@ import 'download.dart';
 ///
 /// Percorrer a árvore SAF a cada reprodução seria lento, então o resultado de
 /// cada resolução fica gravado na tabela `midia` do banco do usuário.
+///
+/// **Cada arquivo entra no índice com duas chaves:** o caminho completo relativo
+/// à pasta escolhida e o par `pasta/arquivo`. A segunda existe porque o
+/// reconhecimento não pode depender de qual nível o usuário apontou no seletor —
+/// escolher a pasta que contém `musics/pt/...` ou a própria `pt` mudaria todas as
+/// chaves. O sufixo casa nos dois casos, e também quando a mídia foi copiada com
+/// o layout antigo (`musicas/Álbum/Faixa.mp3`).
 class Midia {
   Midia._();
   static final Midia instancia = Midia._();
@@ -63,13 +71,22 @@ class Midia {
   /// O retorno pode ser um `content://` (pasta via SAF) ou um `file://`
   /// (download). O ExoPlayer lê os dois, então quem chama não precisa saber a
   /// diferença.
+  /// Par `pasta/arquivo` de um caminho — a chave que sobrevive a mudanças de
+  /// prefixo. `musics/pt/1995 - X/Y.mp3` vira `1995 - X/Y.mp3`.
+  static String sufixoDe(String caminho) {
+    final p = caminho.split('/');
+    return p.length < 2 ? caminho : '${p[p.length - 2]}/${p.last}';
+  }
+
   Future<String?> uriDe(String caminhoRelativo) async {
     final db = await Banco.usuario;
+    final sufixo = sufixoDe(caminhoRelativo);
+
     final cache = await db.query(
       'midia',
       columns: ['uri'],
-      where: 'caminho = ?',
-      whereArgs: [caminhoRelativo],
+      where: 'chave = ? OR chave = ?',
+      whereArgs: [caminhoRelativo, sufixo],
       limit: 1,
     );
     if (cache.isNotEmpty) return cache.first['uri'] as String;
@@ -79,11 +96,7 @@ class Midia {
     if (r != null) {
       final doc = await _saf.child(r, caminhoRelativo.split('/'));
       if (doc != null) {
-        await db.insert('midia', {
-          'caminho': caminhoRelativo,
-          'uri': doc.uri,
-          'bytes': doc.length,
-        });
+        await _gravar(db, caminhoRelativo, doc.uri, doc.length);
         return doc.uri;
       }
     }
@@ -92,15 +105,27 @@ class Midia {
     final baixado = await Download.instancia.arquivoDe(caminhoRelativo);
     if (await baixado.exists()) {
       final uri = baixado.uri.toString();
-      await db.insert('midia', {
-        'caminho': caminhoRelativo,
-        'uri': uri,
-        'bytes': await baixado.length(),
-      });
+      await _gravar(db, caminhoRelativo, uri, await baixado.length());
       return uri;
     }
 
     return null;
+  }
+
+  /// Grava as duas chaves apontando para o mesmo arquivo.
+  Future<void> _gravar(
+    Database db,
+    String caminho,
+    String uri,
+    int bytes,
+  ) async {
+    for (final chave in {caminho, sufixoDe(caminho)}) {
+      await db.insert('midia', {
+        'chave': chave,
+        'uri': uri,
+        'bytes': bytes,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
   }
 
   /// Esquece a entrada de [caminhoRelativo] no índice.
@@ -111,13 +136,33 @@ class Midia {
     final db = await Banco.usuario;
     await db.delete(
       'midia',
-      where: 'caminho = ?',
-      whereArgs: [caminhoRelativo],
+      where: 'chave = ? OR chave = ?',
+      whereArgs: [caminhoRelativo, sufixoDe(caminhoRelativo)],
     );
   }
 
   Future<bool> existe(String caminhoRelativo) async =>
       await uriDe(caminhoRelativo) != null;
+
+  /// Quantas faixas do catálogo o índice já resolve.
+  ///
+  /// Responde à pergunta que o usuário faz ao ver metade do acervo tocando:
+  /// "a pasta que eu copiei está certa?". Comparar em memória é o caminho —
+  /// catálogo e índice vivem em bancos separados, então não há join possível, e
+  /// 1.889 comparações de string custam milissegundos.
+  Future<({int encontradas, int total})> cobertura() async {
+    final caminhos = await const Repositorio().caminhosDeAudio();
+    final db = await Banco.usuario;
+    final chaves = {
+      for (final r in await db.query('midia', columns: ['chave']))
+        r['chave'] as String,
+    };
+    var achadas = 0;
+    for (final c in caminhos) {
+      if (chaves.contains(c) || chaves.contains(sufixoDe(c))) achadas++;
+    }
+    return (encontradas: achadas, total: caminhos.length);
+  }
 
   /// Varre a pasta escolhida e preenche o índice de uma vez.
   ///
@@ -137,11 +182,7 @@ class Midia {
         if (item.isDir) {
           await percorrer(item.uri, caminho);
         } else {
-          await db.insert('midia', {
-            'caminho': caminho,
-            'uri': item.uri,
-            'bytes': item.length,
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          await _gravar(db, caminho, item.uri, item.length);
           if (++total % 50 == 0) aoProgredir?.call(total);
         }
       }

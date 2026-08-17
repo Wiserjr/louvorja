@@ -180,6 +180,15 @@ class Repositorio {
     return r.map(Musica.doMapa).toList();
   }
 
+  /// Todos os caminhos de áudio do catálogo, para medir a cobertura da pasta.
+  Future<List<String>> caminhosDeAudio() async {
+    final db = await Banco.catalogo;
+    final r = await db.rawQuery(
+      'SELECT audio FROM musicas WHERE audio IS NOT NULL',
+    );
+    return r.map((m) => m['audio']! as String).toList();
+  }
+
   // ---------- Coletâneas on-line ----------
 
   Future<List<Canal>> canais() async {

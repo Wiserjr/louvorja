@@ -23,8 +23,10 @@ class _TelaAjustesState extends State<TelaAjustes> {
   ResultadoTeste? _teste;
   bool _testando = false;
   int _bytesBaixados = 0;
+  String? _ondeGrava;
 
   Diagnostico? _diag;
+  ({int encontradas, int total})? _cobertura;
   bool _sincronizando = false;
   String _etapa = '';
   double? _progresso;
@@ -41,12 +43,19 @@ class _TelaAjustesState extends State<TelaAjustes> {
     });
     _atualizarEspaco();
     _verificarCatalogo();
+    _medirCobertura();
   }
 
   @override
   void dispose() {
     _urlCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _medirCobertura() async {
+    if (await Midia.instancia.raiz == null) return;
+    final c = await Midia.instancia.cobertura();
+    if (mounted) setState(() => _cobertura = c);
   }
 
   Future<void> _verificarCatalogo() async {
@@ -83,7 +92,13 @@ class _TelaAjustesState extends State<TelaAjustes> {
 
   Future<void> _atualizarEspaco() async {
     final b = await Download.instancia.bytesOcupados();
-    if (mounted) setState(() => _bytesBaixados = b);
+    final onde = await Download.instancia.descricaoDaPasta;
+    if (mounted) {
+      setState(() {
+        _bytesBaixados = b;
+        _ondeGrava = onde;
+      });
+    }
   }
 
   Future<void> _escolher() async {
@@ -108,6 +123,29 @@ class _TelaAjustesState extends State<TelaAjustes> {
         _indexados = total;
       });
     }
+    await _medirCobertura();
+    await widget.aoMudarPasta?.call();
+  }
+
+  /// Refaz a varredura da mesma pasta.
+  ///
+  /// Necessário depois de copiar mais álbuns: o índice é um retrato do momento
+  /// da escolha, não um observador do sistema de arquivos.
+  Future<void> _reindexar() async {
+    setState(() {
+      _indexando = true;
+      _indexados = 0;
+    });
+    final total = await Midia.instancia.indexar(
+      aoProgredir: (n) => mounted ? setState(() => _indexados = n) : null,
+    );
+    if (mounted) {
+      setState(() {
+        _indexando = false;
+        _indexados = total;
+      });
+    }
+    await _medirCobertura();
     await widget.aoMudarPasta?.call();
   }
 
@@ -218,6 +256,36 @@ class _TelaAjustesState extends State<TelaAjustes> {
               child: Text(_pasta == null ? 'Escolher' : 'Trocar'),
             ),
           ),
+          if (_cobertura != null && !_indexando)
+            ListTile(
+              leading: Icon(
+                _cobertura!.encontradas == 0
+                    ? Icons.error_outline
+                    : _cobertura!.encontradas < _cobertura!.total
+                    ? Icons.info_outline
+                    : Icons.check_circle_outline,
+              ),
+              title: Text(
+                '${_cobertura!.encontradas} de ${_cobertura!.total} faixas '
+                'encontradas na pasta',
+              ),
+              // Quando a conta não fecha, o motivo quase sempre é o nível de
+              // pasta escolhido ou uma cópia parcial — dizer isso poupa o
+              // usuário de adivinhar.
+              subtitle: Text(
+                _cobertura!.encontradas == 0
+                    ? 'Nenhuma. Confira se apontou a pasta que contém "musics" '
+                          'ou "musicas", e refaça a varredura.'
+                    : _cobertura!.encontradas < _cobertura!.total
+                    ? 'O resto pode ser baixado, ou copiado depois para a mesma '
+                          'pasta. Refaça a varredura após copiar.'
+                    : 'A pasta cobre todo o catálogo.',
+              ),
+              trailing: TextButton(
+                onPressed: _indexando ? null : _reindexar,
+                child: const Text('Varrer'),
+              ),
+            ),
           if (_indexando)
             ListTile(
               leading: const SizedBox(
@@ -302,7 +370,15 @@ class _TelaAjustesState extends State<TelaAjustes> {
           ListTile(
             leading: const Icon(Icons.sd_storage_outlined),
             title: const Text('Mídia baixada'),
-            subtitle: Text(_mb(_bytesBaixados)),
+            // Dizer onde está gravando importa: quando o externo não aceita
+            // escrita, o app cai para o interno silenciosamente, e o usuário
+            // merece saber por que o espaço some de outro lugar.
+            subtitle: Text(
+              [
+                _mb(_bytesBaixados),
+                ?_ondeGrava,
+              ].join(' · '),
+            ),
             trailing: TextButton(
               onPressed: _bytesBaixados == 0 ? null : _limpar,
               child: const Text('Apagar'),
