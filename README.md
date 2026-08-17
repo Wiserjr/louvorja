@@ -298,16 +298,33 @@ gh repo add-collaborator louvorja USUARIO
 Para distribuir a um grupo maior, é mais simples enviar o APK direto (WhatsApp,
 Drive) do que abrir o repositório.
 
-## Áudio bíblico gravado
+## Áudio bíblico gravado (Bible Brain)
 
-Não é possível embutir aqui as gravações do YouVersion/bible.com nem de apps
-semelhantes: são obras licenciadas de editoras, e os termos de uso vedam
-extração e redistribuição.
+Gravações narradas por pessoas, da **Bible Brain** (Faith Comes By Hearing) —
+gratuita para uso não comercial. Configure em *Ajustes → Bíblia em áudio*:
 
-A via legítima, se um dia fizer sentido, é a **Bible Brain** da Faith Comes By
-Hearing — API gratuita para uso não comercial, com áudio bíblico em mais de dois
-mil idiomas, inclusive português. Exige registro e uma chave de API, que teria de
-ser configurada pelo usuário do mesmo modo que a URL do acervo.
+1. Peça sua chave em <https://4.dbt.io/api_key/request>
+2. Cole no campo e toque em **Verificar e listar versões**
+3. Escolha a versão; o botão de ouvir na Bíblia passa a tocar a gravação
+
+Não é possível embutir as gravações do YouVersion/bible.com nem de apps
+semelhantes: são obras licenciadas de editoras, e os termos vedam extração e
+redistribuição. A chave por usuário é justamente o que separa uso legítimo de
+cópia.
+
+Contrato usado (do OpenAPI oficial em `4.dbt.io/open-api-4.json`):
+
+    GET /bibles?language_code=por&media=audio&v=4&key=…    lista as versões
+    GET /bibles/filesets/{fileset_id}/{livro}/{cap}?v=4…   devolve data[].path
+
+O `fileset_id` — e não o id da Bíblia — é o que o endpoint de capítulo recebe. A
+API identifica livros por código USFM (`GEN`, `PSA`, `MAT`); o catálogo daqui usa
+número de 1 a 66, e a conversão entre os dois tem testes próprios, porque um
+deslocamento de uma posição tocaria o livro errado sem quebrar nada visivelmente.
+
+Quando não há chave, versão escolhida, ou quando a versão não cobre o capítulo
+aberto — uma edição só do Novo Testamento, por exemplo —, o app volta sozinho
+para a voz sintetizada.
 
 ## Licenciamento
 

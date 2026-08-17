@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../dados/download.dart';
 import '../dados/sincronizacao.dart';
 import 'tela_downloads.dart';
+import 'tela_audio_biblia.dart';
 import 'tela_voz.dart';
 import '../dados/midia.dart';
 
@@ -243,6 +244,15 @@ class _TelaAjustesState extends State<TelaAjustes> {
               title: Text(_resultadoSync!),
             ),
           const Divider(height: 32),
+          ListTile(
+            leading: const Icon(Icons.headphones_outlined),
+            title: const Text('Biblia em audio'),
+            subtitle: const Text('Gravacoes narradas, via Bible Brain'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const TelaAudioBiblia())),
+          ),
           ListTile(
             leading: const Icon(Icons.record_voice_over_outlined),
             title: const Text('Voz da leitura bíblica'),

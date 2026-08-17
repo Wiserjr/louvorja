@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
+import '../dados/biblia_audio.dart';
 import '../dados/compartilhar.dart';
 import '../dados/leitor_voz.dart';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
 import 'cartao_versiculo.dart';
+import 'tela_audio_biblia.dart';
 import 'tela_voz.dart';
 
 /// Leitor bíblico: navegação por livro e capítulo, busca no texto, leitura em
@@ -34,6 +37,14 @@ class _TelaBibliaState extends State<TelaBiblia> {
   double _fonte = 17;
   bool _temVoz = false;
 
+  /// Player da gravação da Bible Brain, quando há uma versão configurada.
+  ///
+  /// A síntese continua existindo como alternativa — e como plano B, quando a
+  /// versão escolhida não cobre o capítulo aberto.
+  final _gravacao = AudioPlayer();
+  String? _urlGravacao;
+  bool _buscandoGravacao = false;
+
   /// Versículos marcados para compartilhar. Vazio = ninguém selecionado.
   final _selecionados = <int>{};
 
@@ -55,8 +66,38 @@ class _TelaBibliaState extends State<TelaBiblia> {
   @override
   void dispose() {
     _leitor.parar();
+    _gravacao.dispose();
     _buscaCtrl.dispose();
     super.dispose();
+  }
+
+  /// Procura a gravação do capítulo aberto.
+  ///
+  /// Silencioso de propósito: sem chave, sem versão escolhida, ou num capítulo
+  /// fora do conjunto, o resultado é apenas "não há" — e o botão volta a
+  /// oferecer a voz sintetizada.
+  Future<void> _procurarGravacao() async {
+    final livro = _livros.firstWhere(
+      (l) => l['id'] == _idLivro,
+      orElse: () => const {},
+    );
+    if (livro.isEmpty) return;
+
+    setState(() {
+      _urlGravacao = null;
+      _buscandoGravacao = true;
+    });
+    await _gravacao.stop();
+
+    final achado = await BibleBrain.instancia.audioDoCapitulo(
+      numeroDoLivro: livro['numero'] as int,
+      capitulo: _capitulo,
+    );
+    if (!mounted) return;
+    setState(() {
+      _urlGravacao = achado?.url;
+      _buscandoGravacao = false;
+    });
   }
 
   Future<void> _carregarBase() async {
@@ -83,6 +124,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
       _buscaCtrl.clear();
       _resultados = null;
     });
+    await _procurarGravacao();
   }
 
   String? get _sigla {
@@ -109,6 +151,27 @@ class _TelaBibliaState extends State<TelaBiblia> {
         .push(MaterialPageRoute(builder: (_) => const TelaVoz()));
     final v = await _leitor.temVozPortuguesa();
     if (mounted) setState(() => _temVoz = v);
+  }
+
+  Future<void> _alternarGravacao() async {
+    final url = _urlGravacao;
+    if (url == null) return;
+    // Capturado antes de qualquer await: depois da suspensão o widget pode já
+    // ter saído da árvore, e o context não vale mais.
+    final mensageiro = ScaffoldMessenger.of(context);
+    await _leitor.parar();
+    if (_gravacao.playing) {
+      await _gravacao.stop();
+      return;
+    }
+    try {
+      await _gravacao.setUrl(url);
+      await _gravacao.play();
+    } catch (e) {
+      mensageiro.showSnackBar(
+        SnackBar(content: Text('Nao foi possivel tocar a gravacao: $e')),
+      );
+    }
   }
 
   Future<void> _alternarLeitura() async {
@@ -332,26 +395,64 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            ValueListenableBuilder<bool>(
-              valueListenable: _leitor.lendo,
-              builder: (context, lendo, _) => IconButton(
-                tooltip: lendo ? 'Parar a leitura' : 'Ouvir o capítulo',
-                // Toque longo abre a escolha de voz: é lá que se resolve o som
-                // ruim, e ninguém procuraria isso nos Ajustes gerais.
-                onPressed: _temVoz ? _alternarLeitura : _abrirVoz,
-                icon: Icon(
-                  lendo
-                      ? Icons.stop_circle
-                      : _temVoz
-                      ? Icons.volume_up
-                      : Icons.volume_off,
+            if (_buscandoGravacao)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 14),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else if (_urlGravacao != null)
+              StreamBuilder<PlayerState>(
+                stream: _gravacao.playerStateStream,
+                builder: (context, snap) {
+                  final tocando = snap.data?.playing ?? false;
+                  return IconButton(
+                    tooltip: tocando
+                        ? 'Parar a gravação'
+                        : 'Ouvir a gravação narrada',
+                    onPressed: _alternarGravacao,
+                    icon: Icon(tocando ? Icons.stop_circle : Icons.headphones),
+                  );
+                },
+              )
+            else
+              ValueListenableBuilder<bool>(
+                valueListenable: _leitor.lendo,
+                builder: (context, lendo, _) => IconButton(
+                  tooltip: lendo ? 'Parar a leitura' : 'Ouvir o capítulo',
+                  onPressed: _temVoz ? _alternarLeitura : _abrirVoz,
+                  icon: Icon(
+                    lendo
+                        ? Icons.stop_circle
+                        : _temVoz
+                        ? Icons.volume_up
+                        : Icons.volume_off,
+                  ),
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: 'Voz da leitura',
-              onPressed: _abrirVoz,
-              icon: const Icon(Icons.record_voice_over_outlined),
+            PopupMenuButton<String>(
+              tooltip: 'Áudio',
+              icon: const Icon(Icons.more_vert),
+              onSelected: (v) async {
+                if (v == 'voz') {
+                  await _abrirVoz();
+                } else {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const TelaAudioBiblia()),
+                  );
+                  await _procurarGravacao();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'gravado',
+                  child: Text('Biblia em audio (gravada)'),
+                ),
+                PopupMenuItem(value: 'voz', child: Text('Voz sintetizada')),
+              ],
             ),
             IconButton(
               onPressed: _capitulo > 1 ? () => _mudarCapitulo(-1) : null,
@@ -395,6 +496,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
       _capitulo += delta;
       _selecionados.clear();
     });
+    await _procurarGravacao();
   }
 
   Widget _verso(Versiculo v, bool sendoLido) {
