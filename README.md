@@ -297,16 +297,22 @@ O repositório é privado. Para enviar ao GitHub e criar a release com os APKs:
 powershell -ExecutionPolicy Bypass -File publicar.ps1
 ```
 
-O script cria o repositório privado, envia os commits e publica a release
-`v1.0.0` com os três APKs por arquitetura.
+O script roda `flutter analyze` e os testes, compila os três APKs por
+arquitetura, envia os commits e publica a release. A **tag vem do `version:` do
+pubspec.yaml** — para lançar a 1.0.4, suba a versão lá e rode o script. Se a tag
+já existir, ele substitui os APKs e as notas em vez de criar outra release.
 
-**Atenção ao compartilhar:** arquivos de release herdam a visibilidade do
-repositório. Num repositório privado, quem receber o link e não tiver acesso vê
-404. Para o link funcionar, adicione a pessoa como colaboradora:
+Duas opções para os casos em que o ciclo completo não faz sentido:
 
 ```bash
-gh repo add-collaborator louvorja USUARIO
+# republicar os APKs que já estão em build\, sem recompilar
+powershell -ExecutionPolicy Bypass -File publicar.ps1 -SemCompilar
+
+# pular analyze e testes
+powershell -ExecutionPolicy Bypass -File publicar.ps1 -SemTestes
 ```
+
+O repositório é público, então o link da release baixa direto, sem login.
 
 Para distribuir a um grupo maior, é mais simples enviar o APK direto (WhatsApp,
 Drive) do que abrir o repositório.
