@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../dados/download.dart';
 import '../dados/sincronizacao.dart';
@@ -27,6 +28,14 @@ class _TelaAjustesState extends State<TelaAjustes> {
   int _bytesBaixados = 0;
   String? _ondeGrava;
 
+  /// "1.0.5 (6)" - versao e versionCode do APK instalado.
+  ///
+  /// Sem loja para gerenciar atualizacao, e aqui que alguem descobre se esta
+  /// desatualizado. O versionCode vai junto porque e ele que o Android compara
+  /// ao instalar por cima, e foi justamente ele que travou as versoes 1.0.0 a
+  /// 1.0.3 umas sobre as outras.
+  String? _versaoApp;
+
   Diagnostico? _diag;
   ({int encontradas, int total})? _cobertura;
   bool _sincronizando = false;
@@ -42,6 +51,11 @@ class _TelaAjustesState extends State<TelaAjustes> {
     });
     Download.instancia.urlBase.then((v) {
       if (mounted) _urlCtrl.text = v;
+    });
+    PackageInfo.fromPlatform().then((p) {
+      if (mounted) {
+        setState(() => _versaoApp = '${p.version} (${p.buildNumber})');
+      }
     });
     _atualizarEspaco();
     _verificarCatalogo();
@@ -401,6 +415,16 @@ class _TelaAjustesState extends State<TelaAjustes> {
               onPressed: _bytesBaixados == 0 ? null : _limpar,
               child: const Text('Apagar'),
             ),
+          ),
+
+          const _Titulo('Sobre'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Versão do app'),
+            // Distinto da "Versão do acervo" logo acima, que é a do catálogo
+            // de músicas. Confundir os dois manda o usuário conferir o número
+            // errado justamente quando está tentando saber se atualizou.
+            subtitle: Text(_versaoApp ?? '—'),
           ),
 
           // A atribuição da Bíblia Livre não é cortesia: a licença Creative

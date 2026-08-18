@@ -38,10 +38,9 @@ instalar normalmente. Só que esta ainda precisa de um empurrão:
 > este APK. Suas configurações se perdem (pasta das músicas, voz da leitura),
 > mas as músicas já baixadas ficam no aparelho.
 
-Para saber qual versão está instalada: *Configurações do Android → Apps →
-Louvor JA*, e role até o fim. O app ainda não mostra isso na própria tela —
-o "Versão do acervo" que aparece em *Ajustes* é outra coisa: é a versão do
-catálogo de músicas, não a do aplicativo.
+Para conferir se deu certo: *Ajustes → Sobre → Versão do app*, que a partir
+desta versão mostra `1.0.5 (6)`. Não confunda com o **Versão do acervo**, na
+mesma tela: aquele é o catálogo de músicas, não o aplicativo.
 
 ## Novidades desde a 1.0.0
 
@@ -56,6 +55,7 @@ Se você ficou preso numa versão antiga, é isto que chega de uma vez:
 - **Ouvir a Bíblia** com escolha de motor e voz, e **Bíblia em áudio** pela
   Bible Brain quando há chave configurada.
 - **Download de músicas pelo app**, por álbum, categoria ou acervo inteiro.
+- **Versão do app visível** em *Ajustes → Sobre*, para você saber se está em dia.
 
 ## Compartilhar
 
