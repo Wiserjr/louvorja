@@ -6,6 +6,8 @@ import '../dados/compartilhar.dart';
 import '../dados/leitor_voz.dart';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
+import '../dados/versiculo_do_dia.dart';
+import 'cartao_dia.dart';
 import 'cartao_versiculo.dart';
 import 'tela_audio_biblia.dart';
 import 'tela_voz.dart';
@@ -53,6 +55,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
   Future<List<Versiculo>>? _resultados;
 
   List<Versiculo> _doCapitulo = const [];
+
+  /// Versículo do dia já resolvido na tradução corrente. Vazio quando o
+  /// calendário não está disponível.
+  List<Versiculo> _doDia = const [];
+  ReferenciaDoDia? _refDoDia;
+  int? _idLivroDoDia;
 
   @override
   void initState() {
@@ -108,6 +116,38 @@ class _TelaBibliaState extends State<TelaBiblia> {
       _versoes = versoes;
       _livros = livros;
       _idVersao = versoes.isNotEmpty ? versoes.first['id'] as int : null;
+    });
+    await _carregarDoDia();
+  }
+
+  /// Resolve o versículo do dia na tradução corrente.
+  ///
+  /// O calendário guarda `biblia_livro.numero`, não o `id` da linha — por isso
+  /// a passagem pelo `_livros` em vez de usar o número direto na consulta.
+  Future<void> _carregarDoDia() async {
+    final versao = _idVersao;
+    if (versao == null) return;
+
+    final ref = await VersiculoDoDia.hoje();
+    if (ref == null) return;
+
+    final livro = _livros.firstWhere(
+      (l) => l['numero'] == ref.livro,
+      orElse: () => const {},
+    );
+    if (livro.isEmpty) return;
+
+    final idLivro = livro['id'] as int;
+    final capitulo = await _repo.capitulo(idLivro, ref.capitulo, versao);
+    final passagem = capitulo
+        .where((v) => v.numero >= ref.versiculo && v.numero <= ref.ate)
+        .toList();
+
+    if (!mounted) return;
+    setState(() {
+      _refDoDia = ref;
+      _idLivroDoDia = idLivro;
+      _doDia = passagem;
     });
   }
 
@@ -249,6 +289,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
               if (_idLivro != null) {
                 await _abrirLivro(_idLivro!, capitulo: _capitulo);
               }
+              await _carregarDoDia();
             },
           ),
         ),
@@ -292,6 +333,19 @@ class _TelaBibliaState extends State<TelaBiblia> {
   Widget _listaLivros() => Column(
     children: [
       _campoBusca(),
+      if (_doDia.isNotEmpty)
+        CartaoDoDia(
+          versiculos: _doDia,
+          sigla: _sigla,
+          onAbrir: () {
+            final id = _idLivroDoDia;
+            final ref = _refDoDia;
+            if (id != null && ref != null) {
+              _abrirLivro(id, capitulo: ref.capitulo);
+            }
+          },
+          onCompartilhar: () => _compartilharComoImagem(_doDia),
+        ),
       Expanded(
         child: ListView.builder(
           itemCount: _livros.length,

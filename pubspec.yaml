@@ -70,6 +70,7 @@ flutter:
 
   assets:
     - assets/louvorja_pt.db.gz
+    - assets/versiculo_do_dia.json
     - assets/capas/
     - assets/fundos/
 
