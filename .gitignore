@@ -53,3 +53,6 @@ ferramentas/blivre_import.sql
 
 # catalogo intermediario: regeneravel por build_db.py, pesado demais para o historico
 ferramentas/louvorja_pt.db
+
+# saida do Gradle quando o build roda a partir de android/
+android/build/
