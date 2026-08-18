@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# intermediarios da importacao da BLIVRE (regeneraveis)
+ferramentas/blivre_*.zip
+ferramentas/blivre_import.sql

@@ -402,6 +402,27 @@ class _TelaAjustesState extends State<TelaAjustes> {
               child: const Text('Apagar'),
             ),
           ),
+
+          // A atribuição da Bíblia Livre não é cortesia: a licença Creative
+          // Commons que permite embarcá-la no app a exige. Os autores aceitam
+          // a sigla sozinha onde falta espaço — num slide, num cartão —, e é
+          // por isso que o crédito por extenso mora aqui.
+          const _Titulo('Créditos'),
+          const ListTile(
+            leading: Icon(Icons.menu_book_outlined),
+            title: Text('Bíblia Livre (BLIVRE)'),
+            subtitle: Text(
+              'Diego Santos, Mário Sérgio e Marco Teles\n'
+              'Creative Commons Atribuição 3.0 Brasil\n'
+              'sites.google.com/site/biblialivre',
+            ),
+            isThreeLine: true,
+          ),
+          const ListTile(
+            leading: Icon(Icons.wb_sunny_outlined),
+            title: Text('Versículo do dia'),
+            subtitle: Text('Calendário de leituras da YouVersion'),
+          ),
         ],
       ),
     );
