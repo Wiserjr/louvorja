@@ -39,8 +39,14 @@ instalar normalmente. Só que esta ainda precisa de um empurrão:
 > mas as músicas já baixadas ficam no aparelho.
 
 Para conferir se deu certo: *Ajustes → Sobre → Versão do app*, que a partir
-desta versão mostra `1.0.5 (6)`. Não confunda com o **Versão do acervo**, na
-mesma tela: aquele é o catálogo de músicas, não o aplicativo.
+desta versão mostra `1.0.5` e, entre parênteses, o número interno que o
+Android usa para decidir se aceita a atualização. Ele **muda conforme a
+arquitetura** — `1006` no armeabi-v7a, `2006` no arm64-v8a, `4006` no
+x86_64 — e é normal que seja assim; o que importa é ele crescer a cada
+versão.
+
+Não confunda com o **Versão do acervo**, na mesma tela: aquele é o catálogo
+de músicas, não o aplicativo.
 
 ## Novidades desde a 1.0.0
 
