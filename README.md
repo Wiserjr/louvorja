@@ -40,6 +40,11 @@ Regerar o catálogo a partir do banco original:
 python ferramentas/build_db.py
 ```
 
+O `ferramentas/louvorja_pt.db` que sai daí **não é versionado** — são 64 MB que
+mudam por inteiro a cada geração. Quem clonar o repositório precisa rodar o
+comando acima para tê-lo. Versionado fica só o `assets/louvorja_pt.db.gz`, que
+é o que o app carrega.
+
 Ver os álbuns disponíveis e o tamanho de cada um:
 
 ```bash

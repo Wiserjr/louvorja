@@ -50,3 +50,6 @@ app.*.map.json
 # intermediarios da importacao da BLIVRE (regeneraveis)
 ferramentas/blivre_*.zip
 ferramentas/blivre_import.sql
+
+# catalogo intermediario: regeneravel por build_db.py, pesado demais para o historico
+ferramentas/louvorja_pt.db
