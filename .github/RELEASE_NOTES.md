@@ -22,7 +22,30 @@ Na dúvida, use o **arm64-v8a**.
   texto em voz).
 - **Letra maior**: botões A− e A+ no topo do leitor.
 
-## Novidades desta versão
+## Se você já tem o app instalado, leia isto
+
+**As versões 1.0.0 a 1.0.3 não conseguiam se atualizar entre si.** Por um
+descuido nosso, todas foram publicadas com o mesmo número interno de versão
+(`versionCode`), e o Android se recusa a instalar por cima um APK cujo número
+interno não é maior que o já instalado. Na prática: quem instalou a 1.0.0
+continuou nela, mesmo baixando as seguintes — a instalação falhava, ou o
+sistema a ignorava em silêncio.
+
+A partir da **1.0.4** isso está corrigido, e as próximas atualizações vão
+instalar normalmente. Só que esta ainda precisa de um empurrão:
+
+> Se aparecer erro ao instalar por cima, **desinstale o app antigo** e instale
+> este APK. Suas configurações se perdem (pasta das músicas, voz da leitura),
+> mas as músicas já baixadas ficam no aparelho.
+
+Para saber qual versão está instalada: *Configurações do Android → Apps →
+Louvor JA*, e role até o fim. O app ainda não mostra isso na própria tela —
+o "Versão do acervo" que aparece em *Ajustes* é outra coisa: é a versão do
+catálogo de músicas, não a do aplicativo.
+
+## Novidades desde a 1.0.0
+
+Se você ficou preso numa versão antiga, é isto que chega de uma vez:
 
 - **Versículo do dia** no topo da aba Bíblia. Um toque abre o capítulo no
   leitor; o ícone leva ao cartão de imagem. Funciona sem internet, em qualquer
@@ -30,6 +53,9 @@ Na dúvida, use o **arm64-v8a**.
 - **Bíblia Livre (BLIVRE)** em duas edições: `BLIVRE`, do texto crítico Nestle
   1904, e `BLIVRE-TR`, do Textus Receptus. É a única tradução do app com
   licença livre — Creative Commons Atribuição 3.0 Brasil.
+- **Ouvir a Bíblia** com escolha de motor e voz, e **Bíblia em áudio** pela
+  Bible Brain quando há chave configurada.
+- **Download de músicas pelo app**, por álbum, categoria ou acervo inteiro.
 
 ## Compartilhar
 
