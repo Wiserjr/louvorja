@@ -17,10 +17,19 @@ Na dúvida, use o **arm64-v8a**.
 ## Para quem tem dificuldade de ler
 
 - **Ouvir a Bíblia**: o capítulo é lido em voz alta, com o versículo atual
-  destacado e velocidade ajustável. Funciona nas dez traduções. Precisa da voz
+  destacado e velocidade ajustável. Funciona nas doze traduções. Precisa da voz
   em português instalada no aparelho (Configurações → Idiomas → Conversão de
   texto em voz).
 - **Letra maior**: botões A− e A+ no topo do leitor.
+
+## Novidades desta versão
+
+- **Versículo do dia** no topo da aba Bíblia. Um toque abre o capítulo no
+  leitor; o ícone leva ao cartão de imagem. Funciona sem internet, em qualquer
+  das doze traduções.
+- **Bíblia Livre (BLIVRE)** em duas edições: `BLIVRE`, do texto crítico Nestle
+  1904, e `BLIVRE-TR`, do Textus Receptus. É a única tradução do app com
+  licença livre — Creative Commons Atribuição 3.0 Brasil.
 
 ## Compartilhar
 
@@ -33,7 +42,7 @@ Na dúvida, use o **arm64-v8a**.
 - 75 álbuns em 9 categorias, com o ano no subtítulo
 - Hinário Adventista (601 hinos) e o de 1996 (613), com busca por número
 - 59.520 linhas de letra com tempo, sincronizadas com o áudio
-- Bíblia completa em 10 traduções (311.045 versículos)
+- Bíblia completa em 12 traduções (373.249 versículos)
 - Coletâneas on-line: 5 canais, 16 playlists, 1.150 vídeos
 - Busca no texto bíblico e busca global por álbuns e músicas
 
@@ -56,4 +65,5 @@ Duas formas, combináveis:
 - Esta versão é assinada com chave de depuração, adequada para instalação
   direta, não para publicação em loja.
 - Músicas, capas e traduções bíblicas são de seus respectivos detentores; o
-  acervo deriva de louvorja.com.br.
+  acervo deriva de louvorja.com.br. A exceção é a **Bíblia Livre**, sob
+  Creative Commons Atribuição 3.0 Brasil — crédito em *Ajustes → Créditos*.

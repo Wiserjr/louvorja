@@ -1,7 +1,7 @@
 # Louvor JA — app Android
 
 App offline com o acervo do LouvorJA desktop: álbuns, músicas com letra
-sincronizada e a Bíblia em 11 traduções.
+sincronizada e a Bíblia em 12 traduções.
 
 Não é uma conversão do `LouvorJA.exe` — aquele é um binário Delphi/VCL Win32 e
 não tem como virar APK. O que se reaproveita aqui são os **dados**, que já
@@ -18,7 +18,7 @@ estavam numa camada desacoplada do executável.
 
 O catálogo tem 75 álbuns em 9 categorias, 1.889 músicas (incluindo os 601 hinos
 do Hinário Adventista e os 613 do de 1996), 59.520 linhas de letra com tempo,
-342.147 versículos em 11 traduções e as coletâneas on-line: 5 canais, 16
+373.249 versículos em 12 traduções e as coletâneas on-line: 5 canais, 16
 playlists e 1.150 vídeos.
 
 ### Sobre os caminhos de mídia
@@ -69,7 +69,7 @@ músicas**. Álbuns adicionados depois são reconhecidos sem atualizar o app.
 ## Acessibilidade e compartilhamento
 
 **Ouvir a Bíblia.** O leitor lê o capítulo em voz alta pela síntese do próprio
-Android, destacando na tela o trecho corrente. Vale para as **onze traduções** —
+Android, destacando na tela o trecho corrente. Vale para as **doze traduções** —
 uma Bíblia gravada serviria apenas a versão gravada, e as de mercado são
 licenciadas e não podem ser embutidas aqui.
 
@@ -88,7 +88,7 @@ caracteres para as frases fluírem em vez de pararem a cada ponto final.
 **Tamanho da letra** ajustável de 13 a 31 — o mesmo requisito de acessibilidade
 visto pelo outro ângulo.
 
-**Busca no texto bíblico**, sobre os 342.147 versículos.
+**Busca no texto bíblico**, sobre os 373.249 versículos.
 
 **Compartilhar versículos como imagem.** O cartão é montado sobre uma das 21
 fotos que vieram do próprio acervo (o grupo `generico_*` dos fundos de projeção,
@@ -107,7 +107,7 @@ aparelho.
 só as *referências* — 366 coordenadas de livro, capítulo e versículo num arquivo
 de 30 KB, buscado uma vez no PC por `ferramentas/votd.py`. O texto sai do banco
 offline, na tradução que o usuário estiver usando. Por isso o recurso não pede
-rede no aparelho, não leva chave de API dentro do APK e vale para as onze
+rede no aparelho, não leva chave de API dentro do APK e vale para as doze
 traduções, em vez de ficar preso a uma. Toque abre o capítulo no leitor; o ícone
 leva ao cartão de imagem.
 
@@ -272,7 +272,7 @@ Android 36.1, x86_64:
 - busca global: "santo" devolve 38 músicas, cada uma com seu álbum e duração;
 - coletâneas on-line: playlists com miniaturas e reprodução do vídeo no app;
 - download em lote: "Doxologia" estimou 48 faixas e 181 MB antes de iniciar;
-- Bíblia nas 11 traduções;
+- Bíblia nas 12 traduções;
 - sincronização real com a API: *versão 184 → 184, 67 álbuns conferidos*;
 - download de uma faixa e reprodução com letra sincronizada sobre a imagem de
   fundo, em maiúsculas — aos 31s o verso cujo tempo no catálogo é 31s.
@@ -349,8 +349,9 @@ A exceção é a **Bíblia Livre (BLIVRE)**, incluída em 2026: está sob Creati
 Commons Atribuição 3.0 Brasil, de Diego Santos, Mário Sérgio e Marco Teles, e
 pode ser redistribuída livremente desde que creditada — o crédito por extenso
 está em *Ajustes → Créditos*, e os autores aceitam a sigla sozinha onde falta
-espaço, como num slide ou num cartão. É a única das onze traduções que o app
-pode distribuir sem depender de negociação com editora.
+espaço, como num slide ou num cartão. Entra em duas edições: `BLIVRE`, do texto crítico Nestle 1904, e `BLIVRE-TR`,
+do Textus Receptus — a diferença aparece em passagens como 1João 5:7. São as
+duas únicas das doze que o app pode distribuir sem negociar com editora.
 
 Vale registrar o que não existe: as versões da Sociedade Bíblica do Brasil (ARA,
 ARC, NTLH, NAA), da Trinitariana (ACF, ACRF) e da Mundo Cristão (NVT) não são
