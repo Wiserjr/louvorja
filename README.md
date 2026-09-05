@@ -40,6 +40,19 @@ Regerar o catálogo a partir do banco original:
 python ferramentas/build_db.py
 ```
 
+Conferir se o catálogo embarcado está completo, antes de publicar:
+
+```bash
+python ferramentas/conferir_catalogo.py
+```
+
+Ele lê o `assets/louvorja_pt.db.gz` — o arquivo que de fato vai no APK — e
+reprova se faltar tradução. Existe porque a atualização do programa base
+substitui o `database.db` do desktop e apaga as edições da **Bíblia Livre**
+importadas pelo `importar_blivre.py`: depois disso tudo continua compilando e a
+release sai sem elas. Reimporte e regere o catálogo sempre que o programa base
+for atualizado.
+
 O `ferramentas/louvorja_pt.db` que sai daí **não é versionado** — são 64 MB que
 mudam por inteiro a cada geração. Quem clonar o repositório precisa rodar o
 comando acima para tê-lo. Versionado fica só o `assets/louvorja_pt.db.gz`, que
@@ -297,8 +310,8 @@ O repositório é privado. Para enviar ao GitHub e criar a release com os APKs:
 powershell -ExecutionPolicy Bypass -File publicar.ps1
 ```
 
-O script roda `flutter analyze` e os testes, compila os três APKs por
-arquitetura, envia os commits e publica a release. A **tag vem do `version:` do
+O script roda `flutter analyze`, os testes e a conferência do catálogo, compila
+os três APKs por arquitetura, envia os commits e publica a release. A **tag vem do `version:` do
 pubspec.yaml** — para lançar a 1.0.4, suba a versão lá e rode o script. Se a tag
 já existir, ele substitui os APKs e as notas em vez de criar outra release.
 

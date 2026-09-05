@@ -52,6 +52,15 @@ if (-not $SemTestes) {
     if ($LASTEXITCODE -ne 0) { throw 'Os testes falharam. Corrija antes de publicar.' }
 }
 
+# Fora do -SemTestes de proposito. Isto nao mede qualidade de codigo: confere se
+# o catalogo que vai dentro do APK esta completo. A atualizacao do programa base
+# apaga as edicoes da Biblia Livre do banco do desktop, e nada nesse caminho
+# reclama - o build passa e a release sai sem elas. Custa um segundo.
+Write-Output ''
+Write-Output 'Conferindo o catalogo...'
+python ferramentas\conferir_catalogo.py
+if ($LASTEXITCODE -ne 0) { throw 'Catalogo reprovado. Veja acima o que falta.' }
+
 # --- compilacao ---
 # Os tres APKs por arquitetura. O app-release.apk generico fica de fora: ele e
 # apenas o x86_64 da ultima compilacao de teste, nao serve para celular.
