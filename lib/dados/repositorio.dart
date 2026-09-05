@@ -232,6 +232,19 @@ class Repositorio {
     return r.map(VideoOnline.doMapa).toList();
   }
 
+  /// Todos os fundos de slide citados pelo catálogo, sem repetir.
+  ///
+  /// A mesma imagem serve a vários slides e a várias músicas: são 59.520 linhas
+  /// de letra para pouco mais de mil imagens distintas.
+  Future<List<String>> fundosDoCatalogo() async {
+    final db = await Banco.catalogo;
+    final r = await db.rawQuery(
+      'SELECT DISTINCT imagem FROM letras'
+      ' WHERE imagem IS NOT NULL ORDER BY imagem',
+    );
+    return [for (final x in r) x['imagem'] as String];
+  }
+
   // ---------- Bíblia ----------
 
   Future<List<Map<String, Object?>>> versoesBiblia() async {

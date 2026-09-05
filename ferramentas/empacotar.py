@@ -104,6 +104,53 @@ def copiar_reduzido(origem, destino, lado=1920, qualidade=82):
     return True
 
 
+def gravar_zip(arquivos, saida, reduzir):
+    """Grava os arquivos num zip unico, com os caminhos do catalogo dentro.
+
+    E o formato que o app baixa da release: uma requisicao em vez de 1.003, o
+    que tira a carga do servidor da API e funciona para quem instalou o APK sem
+    ter a instalacao do Windows para copiar a pasta.
+
+    Sem compressao (ZIP_STORED) de proposito: JPEG ja esta comprimido, deflate
+    ganharia perto de nada e custaria minutos de CPU dos dois lados.
+    """
+    import tempfile
+    import zipfile
+
+    os.makedirs(os.path.dirname(os.path.abspath(saida)) or ".", exist_ok=True)
+    temporarios = []
+    gravados = 0
+    try:
+        with zipfile.ZipFile(saida, "w", zipfile.ZIP_STORED) as z:
+            for n, rel in enumerate(arquivos, 1):
+                org = para_local(rel)
+                if not os.path.exists(org):
+                    continue
+                fonte = org
+                if reduzir:
+                    tmp = os.path.join(
+                        tempfile.gettempdir(), "lja_" + os.path.basename(rel))
+                    if copiar_reduzido(org, tmp):
+                        fonte, _ = tmp, temporarios.append(tmp)
+                # arcname no formato do catalogo: o app extrai e ja acha
+                z.write(fonte, rel)
+                gravados += 1
+                if n % 100 == 0 or n == len(arquivos):
+                    print("\r  %d/%d arquivos..." % (n, len(arquivos)),
+                          end="", flush=True)
+    finally:
+        for t in temporarios:
+            try:
+                os.remove(t)
+            except OSError:
+                pass
+
+    print("\n\npronto: %d arquivos em %s (%.0f MB)"
+          % (gravados, saida, os.path.getsize(saida) / 1048576))
+    print("anexe esse arquivo a release; o app o baixa por"
+          " releases/latest/download/")
+
+
 def arquivos_de(c, ids, com_playback):
     marks = ",".join("?" * len(ids))
     arquivos = set()
@@ -136,6 +183,9 @@ def main():
                     help="leva todos os fundos do acervo, sem audio nenhum")
     ap.add_argument("--reduzir", action="store_true",
                     help="recomprime os JPEG (q82, max 1920px) ao copiar")
+    ap.add_argument("--zip", dest="zip_saida", metavar="ARQUIVO",
+                    help="grava um zip unico em vez de uma arvore de pastas;"
+                         " e o formato que o app baixa da release")
     a = ap.parse_args()
 
     c = conecta()
@@ -187,8 +237,12 @@ def main():
     if ausentes:
         print("AVISO: %d ausentes na origem, ex.: %s" % (len(ausentes), ausentes[0]))
 
-    if a.simular or not a.destino:
+    if a.simular or not (a.destino or a.zip_saida):
         print("\n(simulacao - nada copiado)")
+        return
+
+    if a.zip_saida:
+        gravar_zip(arquivos, a.zip_saida, a.reduzir)
         return
 
     unidade = os.path.splitdrive(os.path.abspath(a.destino))[0] + os.sep

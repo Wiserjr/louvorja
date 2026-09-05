@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../dados/download.dart';
+import '../dados/pacote_fundos.dart';
+import '../dados/repositorio.dart';
 import '../dados/sincronizacao.dart';
 import 'tela_downloads.dart';
 import 'tela_audio_biblia.dart';
@@ -36,6 +38,9 @@ class _TelaAjustesState extends State<TelaAjustes> {
   /// 1.0.3 umas sobre as outras.
   String? _versaoApp;
 
+  /// Quantos fundos do catálogo já estão no aparelho. Null enquanto confere.
+  ({int presentes, int total})? _fundos;
+
   Diagnostico? _diag;
   ({int encontradas, int total})? _cobertura;
   bool _sincronizando = false;
@@ -60,6 +65,23 @@ class _TelaAjustesState extends State<TelaAjustes> {
     _atualizarEspaco();
     _verificarCatalogo();
     _medirCobertura();
+    _conferirFundos();
+  }
+
+  Future<void> _conferirFundos() async {
+    final lista = await const Repositorio().fundosDoCatalogo();
+    final r = await PacoteFundos.instancia.conferir(lista);
+    if (mounted) setState(() => _fundos = r);
+  }
+
+  Future<void> _baixarFundos() async {
+    try {
+      await PacoteFundos.instancia.baixarEExtrair();
+    } catch (_) {
+      // A mensagem já foi para o estado do pacote e aparece no subtítulo.
+    }
+    await _conferirFundos();
+    await _atualizarEspaco();
   }
 
   @override
@@ -404,6 +426,7 @@ class _TelaAjustesState extends State<TelaAjustes> {
             onTap: () => Navigator.of(context)
                 .push(MaterialPageRoute(builder: (_) => const TelaDownloads())),
           ),
+          _fundosDosSlides(cor),
           ListTile(
             leading: const Icon(Icons.sd_storage_outlined),
             title: const Text('Mídia baixada'),
@@ -449,6 +472,69 @@ class _TelaAjustesState extends State<TelaAjustes> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Baixar de uma vez os fundos que faltam.
+  ///
+  /// O contador existe porque a resposta certa depende do aparelho: quem copiou
+  /// a pasta inteira do PC já tem tudo e não deve baixar nada, e quem copiou
+  /// alguns álbuns só descobriria a falta quando um slide ficasse sem fundo no
+  /// meio do culto.
+  Widget _fundosDosSlides(ColorScheme cor) {
+    return ValueListenableBuilder<EstadoPacote>(
+      valueListenable: PacoteFundos.instancia.estado,
+      builder: (context, est, _) {
+        final rodando = est.etapa != Etapa.parado;
+        final faltam = _fundos == null ? null : _fundos!.total - _fundos!.presentes;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.wallpaper_outlined),
+              title: const Text('Fundos dos slides'),
+              subtitle: Text(switch (est.etapa) {
+                Etapa.baixando => 'Baixando o pacote...',
+                Etapa.extraindo =>
+                  'Extraindo ${est.extraidos} de ${est.aExtrair}...',
+                Etapa.parado when est.erro != null => est.erro!,
+                Etapa.parado when faltam == null => 'Conferindo...',
+                Etapa.parado when faltam == 0 =>
+                  'Todas as ${_fundos!.total} imagens estão no aparelho',
+                Etapa.parado =>
+                  'Faltam $faltam de ${_fundos!.total} — cerca de 158 MB',
+              }),
+              trailing: rodando
+                  ? TextButton(
+                      onPressed: PacoteFundos.instancia.cancelar,
+                      child: const Text('Cancelar'),
+                    )
+                  : (faltam != null && faltam > 0
+                        ? FilledButton.tonal(
+                            onPressed: _baixarFundos,
+                            child: const Text('Baixar'),
+                          )
+                        : null),
+            ),
+            if (rodando)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                // Sem valor a barra fica indefinida: contentLength vem -1 em
+                // resposta chunked, e fingir uma porcentagem seria pior.
+                child: LinearProgressIndicator(value: est.progresso),
+              ),
+            if (!rodando && est.concluidos > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Text(
+                  '${est.concluidos} imagens gravadas.',
+                  style: TextStyle(color: cor.primary),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
