@@ -172,7 +172,7 @@ class _TelaAlbumState extends State<TelaAlbum> {
                     : ListView.separated(
                         itemCount: musicas.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) => _linha(musicas[i], i),
+                        itemBuilder: (context, i) => _linha(musicas, i),
                       ),
               ),
             ],
@@ -200,7 +200,8 @@ class _TelaAlbumState extends State<TelaAlbum> {
     return '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 
-  Widget _linha(Musica m, int i) {
+  Widget _linha(List<Musica> musicas, int i) {
+    final m = musicas[i];
     final temAudio = _disponivel[m.id] ?? false;
     final progresso = _baixando[m.id];
 
@@ -242,9 +243,9 @@ class _TelaAlbumState extends State<TelaAlbum> {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => TelaPlayer(
-            musica: m,
+            fila: musicas,
+            indice: i,
             nomeAlbum: widget.album.nome,
-            temAudio: temAudio,
           ),
         ),
       ),

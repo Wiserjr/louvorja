@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../dados/midia.dart';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
 import 'capa_album.dart';
@@ -186,7 +185,7 @@ class _TelaAlbunsState extends State<TelaAlbuns> {
             ],
             if (r.musicas.isNotEmpty) ...[
               _Secao('Músicas', r.musicas.length),
-              for (final m in r.musicas)
+              for (final (i, m) in r.musicas.indexed)
                 ListTile(
                   // Nem todo álbum numera faixas: a Doxologia usa 0. O número
                   // só aparece quando significa algo — nos hinários ele é o
@@ -210,7 +209,7 @@ class _TelaAlbunsState extends State<TelaAlbuns> {
                   trailing: m.temLetra
                       ? const Icon(Icons.lyrics_outlined, size: 16)
                       : null,
-                  onTap: () => _abrirMusica(m),
+                  onTap: () => _abrirMusica(r.musicas, i),
                 ),
             ],
           ],
@@ -219,15 +218,17 @@ class _TelaAlbunsState extends State<TelaAlbuns> {
     );
   }
 
-  Future<void> _abrirMusica(Musica m) async {
-    final temAudio = m.audio != null && await Midia.instancia.existe(m.audio!);
-    if (!mounted) return;
+  /// Abre o player com o resultado da busca inteiro como fila.
+  ///
+  /// Quem procurou "santo" e achou 38 músicas provavelmente quer ouvir mais de
+  /// uma — a fila poupa voltar à busca a cada faixa.
+  Future<void> _abrirMusica(List<Musica> fila, int indice) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TelaPlayer(
-          musica: m,
-          nomeAlbum: m.albumNome ?? '',
-          temAudio: temAudio,
+          fila: fila,
+          indice: indice,
+          nomeAlbum: fila[indice].albumNome ?? '',
         ),
       ),
     );

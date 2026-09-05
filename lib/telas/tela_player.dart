@@ -17,16 +17,28 @@ import '../player/sincronia.dart';
 class TelaPlayer extends StatefulWidget {
   const TelaPlayer({
     super.key,
-    required this.musica,
+    required this.fila,
+    required this.indice,
     required this.nomeAlbum,
-    required this.temAudio,
   });
 
-  final Musica musica;
+  /// Abre o player numa música só, sem faixa seguinte.
+  TelaPlayer.avulsa({
+    Key? key,
+    required Musica musica,
+    required String nomeAlbum,
+  }) : this(key: key, fila: [musica], indice: 0, nomeAlbum: nomeAlbum);
+
+  /// As músicas que o player percorre, na ordem em que aparecem na tela de
+  /// origem. Sem isto não há "próxima" — e sem próxima não há repetir nem
+  /// aleatório, que são os modos de percorrê-la.
+  final List<Musica> fila;
+
+  /// Onde começar dentro de [fila].
+  final int indice;
 
   /// Só o nome: a busca global abre o player sem ter o objeto do álbum em mãos.
   final String nomeAlbum;
-  final bool temAudio;
 
   @override
   State<TelaPlayer> createState() => _TelaPlayerState();
@@ -58,15 +70,85 @@ class _TelaPlayerState extends State<TelaPlayer> {
   /// Numa projeção durante o culto isso aparece como se o slide travasse.
   Uint8List? _ultimoFundo;
 
+  /// Ordem de reprodução: posições de `widget.fila`, não as músicas.
+  ///
+  /// No aleatório a lista é embaralhada em vez de sortear a cada faixa. Sorteio
+  /// puro repete música antes de tocar todas, que é justamente a queixa comum
+  /// contra o modo aleatório dos outros aplicativos.
+  late List<int> _ordem;
+  late int _pos;
+
+  ModoRepeticao _repeticao = ModoRepeticao.nenhum;
+  bool _aleatorio = false;
+  bool _temAudio = false;
+
+  Musica get _musica => widget.fila[_ordem[_pos]];
+  bool get _temFila => widget.fila.length > 1;
+
   @override
   void initState() {
     super.initState();
+    _ordem = List.generate(widget.fila.length, (i) => i);
+    _pos = widget.indice.clamp(0, widget.fila.length - 1);
+    _player.playerStateStream.listen(_aoMudarEstado);
     _preparar();
   }
 
-  Future<void> _preparar() async {
+  /// Avança sozinho quando a faixa termina, conforme o modo escolhido.
+  void _aoMudarEstado(PlayerState estado) {
+    if (estado.processingState != ProcessingState.completed) return;
+    switch (_repeticao) {
+      case ModoRepeticao.uma:
+        _player.seek(Duration.zero);
+        _player.play();
+      case ModoRepeticao.todas:
+        _irPara(_pos + 1);
+      case ModoRepeticao.nenhum:
+        // Sem repetição a fila acaba quando acaba: parar no fim é o esperado,
+        // e voltar ao início surpreenderia quem deixou tocando.
+        if (_pos + 1 < _ordem.length) _irPara(_pos + 1);
+    }
+  }
+
+  Future<void> _irPara(int novaPos, {bool tocar = true}) async {
+    if (_ordem.isEmpty) return;
+    final pos = novaPos % _ordem.length;
+    await _player.stop();
+    setState(() {
+      _pos = pos < 0 ? pos + _ordem.length : pos;
+      _carregando = true;
+      _erro = null;
+      _playback = false;
+      // Os caches de fundo são por música: a próxima tem as suas imagens.
+      _fundos.clear();
+      _bytes.clear();
+    });
+    await _preparar(tocarAoFim: tocar);
+  }
+
+  /// Volta ao início da faixa se ela já andou — como em qualquer player.
+  void _anterior() {
+    if (_player.position > const Duration(seconds: 3)) {
+      _player.seek(Duration.zero);
+      return;
+    }
+    _irPara(_pos - 1);
+  }
+
+  void _alternarAleatorio() {
+    setState(() {
+      _aleatorio = !_aleatorio;
+      final atual = _ordem[_pos];
+      _ordem = _aleatorio
+          ? ordemAleatoria(widget.fila.length, atual)
+          : List.generate(widget.fila.length, (i) => i);
+      _pos = _ordem.indexOf(atual);
+    });
+  }
+
+  Future<void> _preparar({bool tocarAoFim = false}) async {
     try {
-      _slides = await _repo.slidesDe(widget.musica.id);
+      _slides = await _repo.slidesDe(_musica.id);
       _sinc = Sincronizador(_slides, usarTemposPlayback: _playback);
 
       // Sem await: o áudio não precisa esperar as imagens, e cada fundo que
@@ -74,16 +156,18 @@ class _TelaPlayerState extends State<TelaPlayer> {
       unawaited(_precarregarFundos());
 
       final caminho = _playback
-          ? (widget.musica.audioPlayback ?? widget.musica.audio)
-          : widget.musica.audio;
+          ? (_musica.audioPlayback ?? _musica.audio)
+          : _musica.audio;
 
-      if (widget.temAudio && caminho != null) {
-        final uri = await Midia.instancia.uriDe(caminho);
-        if (uri != null) {
-          // O ExoPlayer lê URIs content:// nativamente — é o que torna o
-          // acesso via SAF viável sem copiar os arquivos para dentro do app.
-          await _player.setAudioSource(AudioSource.uri(Uri.parse(uri)));
-        }
+      // Conferido aqui, não recebido pronto: cada faixa da fila tem o seu
+      // arquivo, e a tela de origem só sabia da primeira.
+      final uri = caminho == null ? null : await Midia.instancia.uriDe(caminho);
+      _temAudio = uri != null;
+      if (uri != null) {
+        // O ExoPlayer lê URIs content:// nativamente — é o que torna o
+        // acesso via SAF viável sem copiar os arquivos para dentro do app.
+        await _player.setAudioSource(AudioSource.uri(Uri.parse(uri)));
+        if (tocarAoFim) _player.play();
       }
     } catch (e) {
       _erro = '$e';
@@ -129,14 +213,14 @@ class _TelaPlayerState extends State<TelaPlayer> {
               if (opcao == 'titulo') {
                 Compartilhar.instancia.texto(
                   Compartilhar.textoDaMusica(
-                    widget.musica,
+                    _musica,
                     album: widget.nomeAlbum.isEmpty ? null : widget.nomeAlbum,
                   ),
                 );
               } else {
                 Compartilhar.instancia.texto(
                   Compartilhar.textoDaLetra(
-                    widget.musica,
+                    _musica,
                     _slides,
                     album: widget.nomeAlbum.isEmpty ? null : widget.nomeAlbum,
                   ),
@@ -157,14 +241,14 @@ class _TelaPlayerState extends State<TelaPlayer> {
                 ),
             ],
           ),
-          if (widget.musica.audioPlayback != null)
+          if (_musica.audioPlayback != null)
             IconButton(
               tooltip: _playback ? 'Ouvindo o playback' : 'Ouvindo a cantada',
               onPressed: _carregando ? null : _alternarPlayback,
               icon: Icon(_playback ? Icons.mic_off : Icons.mic),
             ),
         ],
-        title: Text(widget.musica.nome),
+        title: Text(_musica.nome),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(18),
           child: Text(
@@ -188,7 +272,7 @@ class _TelaPlayerState extends State<TelaPlayer> {
                       ),
                     ),
                   ),
-                if (widget.temAudio) _controles(),
+                if (_temAudio) _controles(),
               ],
             ),
     );
@@ -215,7 +299,7 @@ class _TelaPlayerState extends State<TelaPlayer> {
         return Stack(
           fit: StackFit.expand,
           children: [
-            _fundo(atual?.imagem ?? widget.musica.imagem),
+            _fundo(atual?.imagem ?? _musica.imagem),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: atual == null || atual.texto.trim().isEmpty
@@ -303,7 +387,7 @@ class _TelaPlayerState extends State<TelaPlayer> {
   /// requisições à API que as buscas sob demanda geram numa música inteira.
   Future<void> _precarregarFundos() async {
     final rels = <String>{
-      if (widget.musica.imagem != null) widget.musica.imagem!,
+      if (_musica.imagem != null) _musica.imagem!,
       for (final s in _slides)
         if (s.imagem != null) s.imagem!,
     };
@@ -438,8 +522,16 @@ class _TelaPlayerState extends State<TelaPlayer> {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    if (_temFila)
+                      IconButton(
+                        iconSize: 32,
+                        tooltip: 'Anterior',
+                        onPressed: _anterior,
+                        icon: const Icon(Icons.skip_previous),
+                      ),
                     IconButton(
-                      iconSize: 36,
+                      iconSize: 32,
+                      tooltip: 'Voltar 10 segundos',
                       onPressed: () => _player.seek(
                         _player.position - const Duration(seconds: 10),
                       ),
@@ -452,19 +544,70 @@ class _TelaPlayerState extends State<TelaPlayer> {
                       icon: Icon(tocando ? Icons.pause : Icons.play_arrow),
                     ),
                     IconButton(
-                      iconSize: 36,
+                      iconSize: 32,
+                      tooltip: 'Avançar 10 segundos',
                       onPressed: () => _player.seek(
                         _player.position + const Duration(seconds: 10),
                       ),
                       icon: const Icon(Icons.forward_10),
                     ),
+                    if (_temFila)
+                      IconButton(
+                        iconSize: 32,
+                        tooltip: 'Próxima',
+                        onPressed: () => _irPara(_pos + 1),
+                        icon: const Icon(Icons.skip_next),
+                      ),
                   ],
                 );
               },
             ),
+            if (_temFila) _modos(),
           ],
         ),
       ),
+    );
+  }
+
+  /// Aleatório, repetição e a posição na fila.
+  ///
+  /// Ficam numa linha própria, abaixo do transporte: são estados que ficam
+  /// ligados, não ações momentâneas, e o realce colorido mostra isso sem
+  /// precisar de rótulo.
+  Widget _modos() {
+    final cor = Theme.of(context).colorScheme;
+    final (icone, dica) = switch (_repeticao) {
+      ModoRepeticao.nenhum => (Icons.repeat, 'Repetir: desligado'),
+      ModoRepeticao.todas => (Icons.repeat_on_outlined, 'Repetir: todas'),
+      ModoRepeticao.uma => (Icons.repeat_one_on_outlined, 'Repetir: esta'),
+    };
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+          tooltip: _aleatorio ? 'Aleatório: ligado' : 'Aleatório: desligado',
+          onPressed: _alternarAleatorio,
+          isSelected: _aleatorio,
+          color: _aleatorio ? cor.primary : null,
+          icon: Icon(_aleatorio ? Icons.shuffle_on_outlined : Icons.shuffle),
+        ),
+        Text(
+          '${_pos + 1} de ${widget.fila.length}',
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
+        IconButton(
+          tooltip: dica,
+          // Percorre desligado → todas → esta, como na maioria dos players.
+          onPressed: () => setState(() {
+            _repeticao = ModoRepeticao
+                .values[(_repeticao.index + 1) % ModoRepeticao.values.length];
+          }),
+          isSelected: _repeticao != ModoRepeticao.nenhum,
+          color: _repeticao != ModoRepeticao.nenhum ? cor.primary : null,
+          icon: Icon(icone),
+        ),
+      ],
     );
   }
 
@@ -473,4 +616,32 @@ class _TelaPlayerState extends State<TelaPlayer> {
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
   }
+}
+
+/// Ordem embaralhada de [total] posições, começando por [atual].
+///
+/// Embaralhar a lista em vez de sortear a cada faixa é o que garante que toda
+/// música toque uma vez antes de qualquer repetição — sorteio independente
+/// repete cedo, que é a queixa comum contra o aleatório dos outros players.
+///
+/// [atual] fica na frente porque ela já está tocando quando o usuário liga o
+/// modo: reembaralhar sem isso trocaria a música no meio.
+List<int> ordemAleatoria(int total, int atual) {
+  final resto = [
+    for (var i = 0; i < total; i++)
+      if (i != atual) i,
+  ]..shuffle();
+  return [atual, ...resto];
+}
+
+/// Como a fila se comporta quando a faixa termina.
+enum ModoRepeticao {
+  /// Toca até o fim da fila e para.
+  nenhum,
+
+  /// Volta ao começo da fila depois da última.
+  todas,
+
+  /// Repete a faixa atual indefinidamente.
+  uma,
 }
