@@ -40,6 +40,18 @@ Regerar o catálogo a partir do banco original:
 python ferramentas/build_db.py
 ```
 
+Levar **todos os fundos dos slides** para o celular, sem áudio:
+
+```bash
+python ferramentas/empacotar.py --so-imagens --reduzir --destino "D:\LouvorJA"
+```
+
+As imagens são selecionadas junto com os álbuns, então quem empacota parte do
+acervo fica com parte dos fundos — e as demais músicas passam a buscá-los na API
+durante a reprodução. São 1.003 imagens; `--reduzir` recomprime os JPEG e o
+conjunto cai de **343 MB para 161 MB**. Os 4 PNG ficam intactos, porque
+convertê-los mudaria a extensão que o catálogo referencia.
+
 Conferir se o catálogo embarcado está completo, antes de publicar:
 
 ```bash

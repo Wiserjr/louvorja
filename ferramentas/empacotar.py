@@ -14,6 +14,13 @@ Uso:
     python empacotar.py --listar
     python empacotar.py --albuns 1,4,7-12 --destino "D:\LouvorJA"
     python empacotar.py --albuns todos --destino "D:\LouvorJA" --com-playback
+    python empacotar.py --so-imagens --reduzir --destino "D:\LouvorJA"
+
+Sobre `--so-imagens`: os fundos dos slides sao selecionados junto com os albuns,
+entao quem empacota parte do acervo fica com parte dos fundos. As demais musicas
+ainda tocam - o app busca o fundo na API sob demanda -, mas depender da rede no
+meio do culto e ruim, e a rajada de requisicoes ajuda a estourar o limite do
+servidor. Sao 1.003 imagens; leva-las de uma vez custa pouco perto dos MP3.
 """
 import argparse
 import os
@@ -62,6 +69,41 @@ def parse_selecao(txt, validos):
     return sel & set(validos)
 
 
+def todas_as_imagens(c):
+    """Todos os fundos citados pelo catalogo, independentemente de album."""
+    return sorted(
+        r[0] for r in c.execute(
+            "select distinct imagem from letras where imagem is not null"))
+
+
+def copiar_reduzido(origem, destino, lado=1920, qualidade=82):
+    """Recomprime um JPEG para o destino. Devolve False se nao souber tratar.
+
+    Quase todos os fundos sao 1024x768 salvos com qualidade altissima - bons
+    para projetor, exagerados para um fundo atras de texto num celular. A
+    recompressao corta o conjunto de 343 MB para cerca de 134 MB.
+
+    PNG fica de fora: sao 4 arquivos, 11 MB no total, e converte-los mudaria a
+    extensao que o catalogo referencia.
+    """
+    if not origem.lower().endswith((".jpg", ".jpeg")):
+        return False
+    try:
+        from PIL import Image
+    except ImportError:
+        return False
+    try:
+        with Image.open(origem) as im:
+            im = im.convert("RGB")
+            if max(im.size) > lado:
+                im.thumbnail((lado, lado), Image.LANCZOS)
+            im.save(destino, "JPEG", quality=qualidade,
+                    optimize=True, progressive=True)
+    except Exception:
+        return False
+    return True
+
+
 def arquivos_de(c, ids, com_playback):
     marks = ",".join("?" * len(ids))
     arquivos = set()
@@ -90,12 +132,19 @@ def main():
                     help="inclui as faixas de playback/instrumental")
     ap.add_argument("--simular", action="store_true",
                     help="calcula o tamanho sem copiar nada")
+    ap.add_argument("--so-imagens", action="store_true", dest="so_imagens",
+                    help="leva todos os fundos do acervo, sem audio nenhum")
+    ap.add_argument("--reduzir", action="store_true",
+                    help="recomprime os JPEG (q82, max 1920px) ao copiar")
     a = ap.parse_args()
 
     c = conecta()
     albuns = albuns_com_tamanho(c)
 
-    if a.listar or not a.albuns:
+    if a.so_imagens:
+        arquivos = todas_as_imagens(c)
+        ids = []
+    elif a.listar or not a.albuns:
         cat_atual = None
         for r in albuns:
             if r["categoria"] != cat_atual:
@@ -111,11 +160,11 @@ def main():
         if not a.albuns:
             return
 
-    ids = parse_selecao(a.albuns, [r["id"] for r in albuns])
-    if not ids:
-        sys.exit("nenhum album valido na selecao")
-
-    arquivos = arquivos_de(c, sorted(ids), a.com_playback)
+    if not a.so_imagens:
+        ids = parse_selecao(a.albuns, [r["id"] for r in albuns])
+        if not ids:
+            sys.exit("nenhum album valido na selecao")
+        arquivos = arquivos_de(c, sorted(ids), a.com_playback)
     total = 0
     ausentes = []
     for rel in arquivos:
@@ -125,11 +174,16 @@ def main():
         else:
             ausentes.append(rel)
 
-    nomes = {r["id"]: r["nome"] for r in albuns}
-    print("\n%d albuns selecionados:" % len(ids))
-    for i in sorted(ids):
-        print("   -", nomes[i])
-    print("\n%d arquivos, %.2f GB" % (len(arquivos), total / 1073741824))
+    if a.so_imagens:
+        print("\ntodos os fundos do acervo (sem audio)")
+    else:
+        nomes = {r["id"]: r["nome"] for r in albuns}
+        print("\n%d albuns selecionados:" % len(ids))
+        for i in sorted(ids):
+            print("   -", nomes[i])
+    print("\n%d arquivos, %.0f MB" % (len(arquivos), total / 1048576))
+    if a.reduzir:
+        print("com --reduzir os JPEG saem bem menores que isso")
     if ausentes:
         print("AVISO: %d ausentes na origem, ex.: %s" % (len(ausentes), ausentes[0]))
 
@@ -150,7 +204,11 @@ def main():
         # a saida espelha o catalogo, nao os nomes de pasta do Windows
         dst = os.path.join(a.destino, rel.replace("/", os.sep))
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if not (os.path.exists(dst) and os.path.getsize(dst) == os.path.getsize(org)):
+        # Com --reduzir o tamanho do destino nao bate com o da origem de
+        # proposito, entao a presenca do arquivo e o unico criterio.
+        ja_esta = os.path.exists(dst) and (
+            a.reduzir or os.path.getsize(dst) == os.path.getsize(org))
+        if not ja_esta and not (a.reduzir and copiar_reduzido(org, dst)):
             shutil.copy2(org, dst)
         copiados += 1
         if n % 100 == 0 or n == len(arquivos):
