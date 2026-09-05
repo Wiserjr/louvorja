@@ -6,6 +6,7 @@ import '../dados/compartilhar.dart';
 import '../dados/download.dart';
 import '../dados/midia.dart';
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -49,6 +50,14 @@ class _TelaPlayerState extends State<TelaPlayer> {
   final Map<String, String?> _fundos = {};
   final Map<String, Uint8List?> _bytes = {};
 
+  /// Último fundo que chegou a ser exibido.
+  ///
+  /// Serve de ponte enquanto o próximo carrega. Sem ele, a troca de slide para
+  /// uma imagem ainda não lida pinta o fundo liso por um instante — e se a
+  /// imagem não estiver na pasta, o app vai buscá-la na API e o liso fica.
+  /// Numa projeção durante o culto isso aparece como se o slide travasse.
+  Uint8List? _ultimoFundo;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +68,10 @@ class _TelaPlayerState extends State<TelaPlayer> {
     try {
       _slides = await _repo.slidesDe(widget.musica.id);
       _sinc = Sincronizador(_slides, usarTemposPlayback: _playback);
+
+      // Sem await: o áudio não precisa esperar as imagens, e cada fundo que
+      // chega já dispara o setState de _bytesDoFundo.
+      unawaited(_precarregarFundos());
 
       final caminho = _playback
           ? (widget.musica.audioPlayback ?? widget.musica.audio)
@@ -232,7 +245,9 @@ class _TelaPlayerState extends State<TelaPlayer> {
     return FutureBuilder<Uint8List?>(
       future: _bytesDoFundo(rel),
       builder: (context, snap) {
-        final bytes = snap.data;
+        // Enquanto o próximo fundo não chega, segura o anterior em vez de
+        // piscar o fundo liso.
+        final bytes = snap.data ?? _ultimoFundo;
         if (bytes == null) {
           return Container(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -275,8 +290,27 @@ class _TelaPlayerState extends State<TelaPlayer> {
       dados = null;
     }
     _bytes[rel] = dados;
+    if (dados != null) _ultimoFundo = dados;
     if (mounted) setState(() {});
     return dados;
+  }
+
+  /// Carrega os fundos da música toda antes que os slides comecem a trocar.
+  ///
+  /// São poucas imagens distintas por música — quase sempre uma ou duas — e
+  /// resolvê-las de uma vez evita duas coisas: a espera no meio da reprodução,
+  /// quando um slide entra e sua imagem ainda não foi lida, e a rajada de
+  /// requisições à API que as buscas sob demanda geram numa música inteira.
+  Future<void> _precarregarFundos() async {
+    final rels = <String>{
+      if (widget.musica.imagem != null) widget.musica.imagem!,
+      for (final s in _slides)
+        if (s.imagem != null) s.imagem!,
+    };
+    for (final rel in rels) {
+      if (!mounted) return;
+      await _bytesDoFundo(rel);
+    }
   }
 
   /// O verso na tela: maiúsculas sobre faixa escura, como na projeção.

@@ -48,6 +48,16 @@ versão.
 Não confunda com o **Versão do acervo**, na mesma tela: aquele é o catálogo
 de músicas, não o aplicativo.
 
+## Nesta versão
+
+- **Fundo dos slides não pisca mais.** Quando um slide entrava e sua imagem
+  ainda não tinha sido lida, a tela mostrava um retângulo liso até carregar —
+  e, se a imagem não estivesse na pasta copiada, o liso ficava enquanto o app
+  a buscava no servidor. Durante o culto isso parecia que o slide travava.
+  Agora as imagens da música são carregadas assim que ela abre, e o fundo
+  anterior permanece na tela enquanto o próximo chega.
+- **Acervo atualizado para a versão 185.**
+
 ## Novidades desde a 1.0.0
 
 Se você ficou preso numa versão antiga, é isto que chega de uma vez:
