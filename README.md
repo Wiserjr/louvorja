@@ -52,6 +52,17 @@ durante a reprodução. São 1.003 imagens; `--reduzir` recomprime os JPEG e o
 conjunto cai de **343 MB para 161 MB**. Os 4 PNG ficam intactos, porque
 convertê-los mudaria a extensão que o catálogo referencia.
 
+A **Bíblia Livre** não vem do `database.db`: o `build_db.py` a injeta direto no
+catálogo, lendo `ferramentas/blivre_*_vpl.zip` por meio de `ferramentas/blivre.py`.
+
+Isso é deliberado. O `database.db` é artefato do instalador — toda atualização do
+programa base o substitui, e quando a tradução era importada nele, sumia junto
+sem erro nenhum: o build seguia, o APK compilava e a Bíblia Livre não estava lá.
+Sendo entrada do build em vez de alteração da origem, ela não tem como sumir.
+
+O `importar_blivre.py` continua existindo para quem quiser a tradução também no
+**programa Windows** — e ali a importação segue sendo apagada a cada atualização.
+
 Conferir se o catálogo embarcado está completo, antes de publicar:
 
 ```bash

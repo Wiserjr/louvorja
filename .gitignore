@@ -47,8 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# intermediarios da importacao da BLIVRE (regeneraveis)
-ferramentas/blivre_*.zip
+# intermediario da importacao da BLIVRE (regeneravel)
+# os zips NAO entram aqui: sao a fonte que build_db.py injeta no catalogo
 ferramentas/blivre_import.sql
 
 # catalogo intermediario: regeneravel por build_db.py, pesado demais para o historico

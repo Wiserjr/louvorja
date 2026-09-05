@@ -16,6 +16,8 @@ import os
 import re
 import sqlite3
 
+import blivre
+
 SRC = r"C:\Program Files (x86)\Louvor JA\config\database.db"
 DST = "louvorja_pt.db"
 
@@ -174,21 +176,51 @@ dst.executemany("INSERT INTO letras VALUES (?,?,?,?,?,?,?,?,?)", [
         '  left join files f on f.id_file = l.id_file_image')
 ])
 
-# --- biblia: agora 10 versoes e 311 mil versiculos ---
+# --- biblia ---
+# As versoes proprietarias vem do desktop; a Biblia Livre e injetada logo
+# abaixo, a partir dos arquivos em ferramentas/. Se o banco do desktop ainda
+# tiver uma importacao antiga dela, e ignorada aqui para nao duplicar.
 dst.executemany("INSERT INTO biblia_versao VALUES (?,?,?)", [
     (r["id_bible_version"], r["name"], r["abbreviation"])
     for r in src.execute("select * from bible_version")
+    if not str(r["abbreviation"]).startswith("BLIVRE")
 ])
 dst.executemany("INSERT INTO biblia_livro VALUES (?,?,?,?,?,?)", [
     (r["id_bible_book"], r["book_number"], r["name"], r["abbreviation"],
      r["testament"], r["chapters"])
     for r in src.execute("select * from bible_book")
 ])
+proprietarias = {r[0] for r in dst.execute("select id from biblia_versao")}
 dst.executemany("INSERT INTO biblia_versiculo VALUES (?,?,?,?,?,?)", [
     (r["id_bible_verse"], r["id_bible_version"], r["id_bible_book"],
      r["chapter"], r["verse"], r["text"])
     for r in src.execute("select * from bible_verse")
+    if r["id_bible_version"] in proprietarias
 ])
+
+# --- Biblia Livre, injetada da fonte ---
+#
+# Nao passa pelo database.db de proposito. Aquele arquivo e artefato do
+# instalador: toda atualizacao do programa base o substitui e levava junto a
+# importacao, sem erro nenhum - o build seguia, o APK compilava e a traducao
+# simplesmente nao estava la. Sendo entrada do build em vez de alteracao da
+# origem, ela nao tem como sumir.
+proximo_id = max(proprietarias, default=0) + 1
+proximo_versiculo = (dst.execute(
+    "select ifnull(max(id),0) from biblia_versiculo").fetchone()[0] + 1)
+
+for edicao in ("n4", "tr"):
+    nome, sigla, _ = blivre.EDICOES[edicao]
+    versiculos = blivre.ler(edicao)
+    dst.execute("INSERT INTO biblia_versao VALUES (?,?,?)",
+                (proximo_id, nome, sigla))
+    dst.executemany("INSERT INTO biblia_versiculo VALUES (?,?,?,?,?,?)", [
+        (proximo_versiculo + i, proximo_id, bn, cap, ver, txt)
+        for i, (bn, cap, ver, txt) in enumerate(versiculos)
+    ])
+    print("  %-10s %6d versiculos injetados" % (sigla, len(versiculos)))
+    proximo_id += 1
+    proximo_versiculo += len(versiculos)
 
 # --- coletaneas on-line ---
 def thumb(v):
