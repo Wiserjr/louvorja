@@ -50,6 +50,14 @@ de músicas, não o aplicativo.
 
 ## Nesta versão
 
+- **Baixar os fundos dos slides de uma vez.** Em *Ajustes → Fundos dos slides*
+  o app mostra quantas das 1.003 imagens faltam no aparelho e baixa todas num
+  pacote único. Antes elas vinham do servidor uma a uma durante a reprodução,
+  o que exigia internet no meio do culto — e quem instalou o APK sem ter o
+  programa no computador não tinha como obtê-las.
+
+## Da versão anterior
+
 - **Fundo dos slides não pisca mais.** Quando um slide entrava e sua imagem
   ainda não tinha sido lida, a tela mostrava um retângulo liso até carregar —
   e, se a imagem não estivesse na pasta copiada, o liso ficava enquanto o app
