@@ -50,6 +50,14 @@ de músicas, não o aplicativo.
 
 ## Nesta versão
 
+- **Controles de reprodução.** Ao abrir uma música por dentro de um álbum, o
+  player agora percorre o álbum inteiro: botões de faixa anterior e próxima,
+  modo **aleatório** e **repetição** (a fila toda ou só a faixa atual). Ao
+  terminar, ele avança sozinho conforme o modo escolhido. Pela busca global, a
+  fila é o resultado da busca.
+
+## Da versão anterior
+
 - **Baixar os fundos dos slides de uma vez.** Em *Ajustes → Fundos dos slides*
   o app mostra quantas das 1.003 imagens faltam no aparelho e baixa todas num
   pacote único. Antes elas vinham do servidor uma a uma durante a reprodução,
