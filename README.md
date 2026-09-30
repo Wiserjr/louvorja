@@ -150,6 +150,48 @@ leva ao cartão de imagem.
 **Compartilhar como texto** também, com a referência e a sigla da tradução. E no
 player, o título ou a letra inteira da música.
 
+## Hinários
+
+A primeira aba reúne os dois hinários adventistas — o atual (601 hinos) e o de
+1996 (613) — na forma do site [app.louvorja.com.br](https://app.louvorja.com.br/):
+um seletor entre as duas edições, a busca por número ou nome e, para cada hino,
+as mesmas opções do menu de lá.
+
+| No site | No app |
+|---|---|
+| Executar → Cantado | toca a gravação com as vozes, com a letra sincronizada |
+| Executar → Playback | toca só o acompanhamento, com os tempos de letra próprios dele (`ms_pb`) |
+| Executar → Sem Áudio | os slides na tela, passados à mão |
+| Executar → Letra | o hino inteiro em estrofes, para ler, com tamanho ajustável |
+| Arquivo Cantado / Playback | baixa o MP3 para usar sem internet |
+
+Os hinários continuam aparecendo na aba Álbuns; a aba própria existe porque o
+uso é outro. No culto se procura o hino **pelo número anunciado**, e a pergunta
+seguinte é *como* cantá-lo.
+
+- **Busca por número** casa pelo começo e estreita enquanto se digita: "4"
+  mostra o 4 e os 40; "43" põe o 43 no topo, seguido de 430 a 439. Enter com um
+  número exato abre o hino direto.
+- **Busca por nome** ignora acento, caixa e pontuação — os títulos são
+  irregulares entre as edições ("Ó, Adorai o Senhor" em 1996, "Ó Adorai o
+  Senhor" no atual) — e aceita as palavras em qualquer ordem.
+- **O hinário escolhido é lembrado**: quem usa o de 1996 na sua igreja não
+  precisa escolhê-lo toda vez. O termo digitado vale nos dois, então dá para
+  comparar as edições com um toque.
+- **Cantado e Playback baixam o que falta e tocam em seguida.** O MP3 fica no
+  aparelho para a próxima vez. O menu do hino diz antes do toque se vai tocar
+  na hora ou baixar primeiro, com o tamanho.
+- **A letra na leitura vem dividida em estrofes.** O acervo separa as estrofes
+  com um slide de texto vazio que a projeção não exibe (`exibe_slide = 0`); a
+  tela de leitura lê todas as linhas justamente para aproveitar essa divisão.
+
+O player ganhou o modo sem áudio para todo o acervo, não só os hinos. Ele
+também assume quando o áudio não está no aparelho: antes a tela ficava parada
+no instante zero, sem verso nenhum; agora a letra pode ser passada à mão
+enquanto o aviso oferece baixar e tocar. O modo escolhido — cantado, playback
+ou sem áudio — vale para a fila inteira, porque quem canta com o playback quer
+o playback também no hino seguinte.
+
 ## Busca
 
 O campo no topo da aba Álbuns varre o acervo inteiro: devolve **álbuns e

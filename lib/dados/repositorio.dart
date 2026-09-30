@@ -53,6 +53,41 @@ class Repositorio {
     return r.map(Album.doMapa).toList();
   }
 
+  /// Os álbuns das categorias de hinário, do mais recente ao mais antigo.
+  ///
+  /// Achados pela categoria (`tipo = 'hymnal'`), não por id fixo no código: o
+  /// catálogo é substituível por inteiro, e os ids de álbum não são promessa
+  /// de ninguém.
+  Future<List<Album>> hinarios() async {
+    final db = await Banco.catalogo;
+    final r = await db.rawQuery('''
+      SELECT a.id, a.nome, a.cor, a.capa, c.ordem AS ordem, ac.subtitulo,
+             COUNT(am.id_musica) AS total_musicas
+        FROM categorias c
+        JOIN album_categoria ac ON ac.id_categoria = c.id
+        JOIN albums a ON a.id = ac.id_album
+        LEFT JOIN album_musicas am ON am.id_album = a.id
+       WHERE c.tipo = 'hymnal'
+       GROUP BY a.id, a.nome, a.cor, a.capa, c.ordem, ac.subtitulo
+       ORDER BY c.ordem, ac.ordem
+    ''');
+    return r.map(Album.doMapa).toList();
+  }
+
+  /// Texto de todas as linhas de letra da música, na ordem.
+  ///
+  /// Ao contrário de [slidesDe], aqui entram também as linhas que a projeção
+  /// não exibe: são os slides vazios que marcam o fim de cada estrofe, e é
+  /// deles que a leitura corrida precisa para separá-las.
+  Future<List<String>> textosDaLetra(int idMusica) async {
+    final db = await Banco.catalogo;
+    final r = await db.rawQuery(
+      'SELECT texto FROM letras WHERE id_musica = ? ORDER BY ordem',
+      [idMusica],
+    );
+    return [for (final x in r) x['texto']! as String];
+  }
+
   /// Busca um hino pelo número dentro de um hinário.
   ///
   /// Nos hinários a faixa **é** o número do hino, então a busca por número sai

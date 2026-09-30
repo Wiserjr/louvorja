@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dados/midia.dart';
 import 'telas/tela_albuns.dart';
 import 'telas/tela_biblia.dart';
+import 'telas/tela_hinarios.dart';
 import 'telas/tela_online.dart';
 import 'telas/tela_ajustes.dart';
 
@@ -39,6 +40,9 @@ class Inicio extends StatefulWidget {
 }
 
 class _InicioState extends State<Inicio> {
+  /// Posição da aba Ajustes, para onde o aviso de pasta leva.
+  static const _abaAjustes = 4;
+
   int _aba = 0;
   bool? _midiaOk;
 
@@ -55,7 +59,9 @@ class _InicioState extends State<Inicio> {
 
   @override
   Widget build(BuildContext context) {
+    // Os hinários abrem o app: é o que se procura com pressa, na hora do culto.
     final telas = [
+      const TelaHinarios(),
       const TelaAlbuns(),
       const TelaOnline(),
       const TelaBiblia(),
@@ -78,7 +84,7 @@ class _InicioState extends State<Inicio> {
               Material(
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 child: InkWell(
-                  onTap: () => setState(() => _aba = 3),
+                  onTap: () => setState(() => _aba = _abaAjustes),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -109,6 +115,11 @@ class _InicioState extends State<Inicio> {
         selectedIndex: _aba,
         onDestinationSelected: (i) => setState(() => _aba = i),
         destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.library_music_outlined),
+            selectedIcon: Icon(Icons.library_music),
+            label: 'Hinários',
+          ),
           NavigationDestination(
             icon: Icon(Icons.album_outlined),
             selectedIcon: Icon(Icons.album),

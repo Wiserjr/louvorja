@@ -49,6 +49,20 @@ class Compartilhar {
     return [m.nome, ?album, '', versos, '', _assinatura].join('\n');
   }
 
+  /// Letra em estrofes, como aparece na tela de leitura.
+  static String textoDasEstrofes(
+    String titulo,
+    List<List<String>> estrofes, {
+    String? origem,
+  }) => [
+    titulo,
+    ?origem,
+    '',
+    estrofes.map((e) => e.join('\n')).join('\n\n'),
+    '',
+    _assinatura,
+  ].join('\n');
+
   Future<void> texto(String conteudo, {String? assunto}) async {
     await SharePlus.instance.share(
       ShareParams(text: conteudo, subject: assunto),
