@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'app_atual.dart';
 import 'dados/midia.dart';
+import 'telas/app_hinarios.dart';
 import 'telas/atualizacao_app.dart';
 import 'telas/tela_albuns.dart';
 import 'telas/tela_biblia.dart';
@@ -8,7 +10,9 @@ import 'telas/tela_hinarios.dart';
 import 'telas/tela_online.dart';
 import 'telas/tela_ajustes.dart';
 
-void main() => runApp(const AppLouvorJA());
+/// O mesmo código gera dois apps (ver `soHinarios`): o Louvor JA completo e o
+/// Hinários, só com os dois hinários.
+void main() => runApp(soHinarios ? const AppHinarios() : const AppLouvorJA());
 
 class AppLouvorJA extends StatelessWidget {
   const AppLouvorJA({super.key});

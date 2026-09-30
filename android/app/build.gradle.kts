@@ -6,12 +6,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// App paralelo: `flutter build apk -P paralelo=true` gera um segundo app, com
-// outro identificador e outro nome, que se instala AO LADO do Louvor JA em vez
-// de substituí-lo. Cada um fica com seus próprios ajustes e downloads. Sem a
-// opção, o build é exatamente o de sempre.
-val paralelo = project.findProperty("paralelo")?.toString() == "true"
-
 // Chave de assinatura fixa, lida de android/key.properties (fora do git).
 //
 // A atualização automática só entra por cima se o APK novo for assinado com a
@@ -37,9 +31,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId =
-            if (paralelo) "br.com.wisejr.louvorja.hinarios" else "br.com.wisejr.louvorja"
-        manifestPlaceholders["rotulo"] = if (paralelo) "Hinários" else "louvorja"
+        applicationId = "br.com.wisejr.louvorja"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -50,6 +42,29 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // Dois apps do mesmo código, que se instalam lado a lado (identificadores
+    // diferentes, cada um com seus ajustes e downloads):
+    //
+    //   louvorja  o app completo: 75 álbuns, Bíblia, coletâneas on-line.
+    //   hinario   só os dois hinários, para quem tem pouco espaço. Leva um
+    //             catálogo de ~1 MB em vez de 27 MB (ver pubspec.yaml e
+    //             ferramentas/build_hinario.py).
+    //
+    // flutter build apk --flavor louvorja   /   --flavor hinario
+    flavorDimensions += "app"
+    productFlavors {
+        create("louvorja") {
+            dimension = "app"
+            applicationId = "br.com.wisejr.louvorja"
+            manifestPlaceholders["rotulo"] = "louvorja"
+        }
+        create("hinario") {
+            dimension = "app"
+            applicationId = "br.com.wisejr.louvorja.hinarios"
+            manifestPlaceholders["rotulo"] = "Hinários"
+        }
     }
 
     signingConfigs {

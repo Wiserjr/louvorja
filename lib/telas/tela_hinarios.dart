@@ -17,7 +17,12 @@ import 'tela_player.dart';
 /// eles ganham uma tela própria porque o uso é outro: na igreja se procura o
 /// hino pelo número anunciado, e a pergunta seguinte é *como* cantá-lo.
 class TelaHinarios extends StatefulWidget {
-  const TelaHinarios({super.key});
+  const TelaHinarios({super.key, this.aoAbrirAjustes});
+
+  /// No app Hinários esta é a tela inicial, sem barra de abas por baixo: os
+  /// Ajustes abrem por uma engrenagem na própria barra de busca. No Louvor JA
+  /// fica nulo, porque lá os Ajustes são uma aba.
+  final VoidCallback? aoAbrirAjustes;
 
   @override
   State<TelaHinarios> createState() => _TelaHinariosState();
@@ -224,6 +229,12 @@ class _TelaHinariosState extends State<TelaHinarios> {
                       setState(() => _termo = '');
                     },
                     icon: const Icon(Icons.close),
+                  ),
+                if (widget.aoAbrirAjustes != null)
+                  IconButton(
+                    tooltip: 'Ajustes',
+                    onPressed: widget.aoAbrirAjustes,
+                    icon: const Icon(Icons.settings_outlined),
                   ),
               ],
               onChanged: (v) => setState(() => _termo = v),

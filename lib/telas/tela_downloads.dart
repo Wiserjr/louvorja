@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app_atual.dart';
 import '../dados/fila_download.dart';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
@@ -148,7 +149,9 @@ class _TelaDownloadsState extends State<TelaDownloads> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Baixar músicas')),
+      appBar: AppBar(
+        title: Text(soHinarios ? 'Baixar hinos' : 'Baixar músicas'),
+      ),
       body: Column(
         children: [
           ValueListenableBuilder<EstadoFila>(
@@ -417,10 +420,14 @@ class _TelaDownloadsState extends State<TelaDownloads> {
       const _Titulo('Tudo'),
       ListTile(
         leading: const Icon(Icons.cloud_download_outlined),
-        title: const Text('Todo o acervo'),
+        // No Hinários o "acervo" são os dois hinários, e é assim que ele deve
+        // se chamar para quem nunca ouviu falar do resto.
+        title: Text(soHinarios ? 'Os dois hinários' : 'Todo o acervo'),
         subtitle: Text('${_albuns.length} álbuns'),
-        onTap: () =>
-            _preparar('Todo o acervo', () => _repo.musicasParaDownload()),
+        onTap: () => _preparar(
+          soHinarios ? 'Os dois hinários' : 'Todo o acervo',
+          () => _repo.musicasParaDownload(),
+        ),
       ),
       const _Titulo('Por categoria'),
       for (final c in _categorias)
@@ -434,8 +441,10 @@ class _TelaDownloadsState extends State<TelaDownloads> {
             () => _repo.musicasParaDownload(idCategoria: c.id),
           ),
         ),
-      const _Titulo('Por álbum'),
-      for (final a in _albuns)
+      // No Hinários cada categoria tem um álbum só: a lista repetiria a de
+      // cima.
+      if (!soHinarios) const _Titulo('Por álbum'),
+      for (final a in soHinarios ? const <Album>[] : _albuns)
         ListTile(
           leading: const Icon(Icons.album_outlined),
           title: Text(a.nome),

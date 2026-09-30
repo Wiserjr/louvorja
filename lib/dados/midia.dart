@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:saf_util/saf_util.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,7 +91,19 @@ class Midia {
       whereArgs: [caminhoRelativo, sufixo],
       limit: 1,
     );
-    if (cache.isNotEmpty) return cache.first['uri'] as String;
+    if (cache.isNotEmpty) {
+      final uri = cache.first['uri'] as String;
+      // O que veio do download (file://) pode ter sido apagado por "Apagar
+      // hinos/músicas baixadas". Confiar no índice aí faria o player tentar
+      // tocar um arquivo que não existe, e a lista dizer "baixado". Conferir
+      // custa um stat; o content:// da pasta copiada não é conferido aqui,
+      // porque consultar o SAF a cada faixa é justamente o que o índice evita.
+      if (!uri.startsWith('file://') ||
+          await File(Uri.parse(uri).toFilePath()).exists()) {
+        return uri;
+      }
+      await invalidar(caminhoRelativo);
+    }
 
     // 1. pasta escolhida pelo usuário
     final r = await raiz;

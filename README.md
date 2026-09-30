@@ -375,20 +375,52 @@ Android 36.1, x86_64:
   2026). Atualizá-lo exige regerar o banco a partir de uma instalação recente do
   programa, ou passar a consumir `json_db` direto.
 
-## App paralelo: Hinários
+## Dois apps: Louvor JA e Hinários
 
-O mesmo código gera um segundo app, que se instala **ao lado** do Louvor JA em
-vez de substituí-lo:
+O mesmo código gera dois apps, que se instalam **lado a lado** (identificadores
+diferentes, cada um com seus ajustes e downloads):
+
+| Flavor | App | Identificador | Catálogo no APK |
+|---|---|---|---|
+| `louvorja` | **Louvor JA**, completo: 75 álbuns, Bíblia, coletâneas on-line | `br.com.wisejr.louvorja` | 27 MB |
+| `hinario` | **Hinários**, só os dois hinários | `br.com.wisejr.louvorja.hinarios` | < 1 MB |
 
 ```bash
-flutter build apk --release --split-per-abi -P paralelo=true
+flutter run --flavor louvorja
+flutter build apk --release --split-per-abi --flavor hinario
 ```
 
-Ele sai com o identificador `br.com.wisejr.louvorja.hinarios` e o nome
-**Hinários** na tela do celular. Para o Android são apps diferentes, então cada
-um tem seus próprios ajustes, catálogo e músicas baixadas, e a chave de
-assinatura de um não interfere na do outro. Sem `-P paralelo=true` o build é
-exatamente o de sempre.
+Com os flavors definidos, **todo comando de build ou `run` precisa do
+`--flavor`**; sem ele o Gradle monta os dois e o Flutter não acha o APK. Os
+testes não precisam (`flutter test` roda sem flavor).
+
+O Hinários existe para quem tem pouco espaço no celular e não quer um acervo de
+~15 GB. Não é o Louvor JA com abas escondidas:
+
+- **O APK leva só o catálogo dos hinários** — 1.214 hinos, com letra, tempos e
+  caminhos de áudio, em menos de 1 MB. O catálogo do Louvor JA, as capas e os
+  fundos entram só no flavor `louvorja` (assets condicionais no
+  `pubspec.yaml`). O código da Bíblia e das coletâneas sai no tree-shaking,
+  porque `soHinarios` (`lib/app_atual.dart`) é constante de compilação.
+- **Nada é baixado sem a pessoa tocar um hino.** Cada hino tocado ocupa ~3,5 MB
+  (e o fundo dos slides, algumas centenas de KB). *Ajustes → Hinos baixados*
+  mostra o total, e *Apagar hinos baixados* libera tudo: as letras continuam no
+  app, e o áudio volta a ser baixado quando tocar.
+- **A tela inicial é a lista de hinos**, com a engrenagem dos Ajustes na barra
+  de busca. Os Ajustes têm só espaço, "baixar um hinário inteiro" (opcional,
+  com o tamanho antes de começar), atualização e créditos — nada de pasta
+  copiada do PC, URL de servidor ou voz da Bíblia.
+- **Sem sincronização com a API do acervo**, que traria os álbuns das
+  coletâneas para dentro do catálogo.
+
+O catálogo do Hinários sai do catálogo do Louvor JA:
+
+```bash
+python ferramentas/build_hinario.py
+```
+
+Rode sempre que regerar o `assets/louvorja_pt.db.gz`. A saída é determinística:
+sem mudança no catálogo, o `assets/hinario.db.gz` sai idêntico.
 
 ## Atualização automática do app
 

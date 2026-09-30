@@ -34,12 +34,12 @@ $apk = 'build\app\outputs\flutter-apk'
 $saida = 'build\publicar'
 $repo = 'Wiserjr/louvorja'
 
-# Os dois apps que o mesmo codigo gera (ver -P paralelo=true no build.gradle.kts).
-# O prefixo nomeia os APKs na release: os dois convivem nela, e nomes iguais se
-# sobrescreveriam.
+# Os dois apps que o mesmo codigo gera (productFlavors no build.gradle.kts): o
+# Louvor JA completo e o Hinarios, so com os dois hinarios. O prefixo nomeia os
+# APKs na release: os dois convivem nela, e nomes iguais se sobrescreveriam.
 $apps = @(
-    @{ Id = 'br.com.wisejr.louvorja';          Prefixo = 'louvorja'; Args = @() },
-    @{ Id = 'br.com.wisejr.louvorja.hinarios'; Prefixo = 'hinarios'; Args = @('-P', 'paralelo=true') }
+    @{ Id = 'br.com.wisejr.louvorja';          Prefixo = 'louvorja'; Flavor = 'louvorja' },
+    @{ Id = 'br.com.wisejr.louvorja.hinarios'; Prefixo = 'hinarios'; Flavor = 'hinario' }
 )
 $abis = @('arm64-v8a', 'armeabi-v7a', 'x86_64')
 
@@ -128,10 +128,10 @@ if (-not $SemCompilar) {
     foreach ($app in $apps) {
         Write-Output ''
         Write-Output "Compilando $($app.Prefixo)..."
-        & $flutter build apk --release --split-per-abi @($app.Args)
+        & $flutter build apk --release --split-per-abi --flavor "$($app.Flavor)"
         if ($LASTEXITCODE -ne 0) { throw "A compilacao de $($app.Prefixo) falhou." }
         foreach ($abi in $abis) {
-            Copy-Item "$apk\app-$abi-release.apk" "$saida\$($app.Prefixo)-$abi.apk"
+            Copy-Item "$apk\app-$abi-$($app.Flavor)-release.apk" "$saida\$($app.Prefixo)-$abi.apk"
         }
     }
 }
