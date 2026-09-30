@@ -406,10 +406,14 @@ O Hinários existe para quem tem pouco espaço no celular e não quer um acervo 
   (e o fundo dos slides, algumas centenas de KB). *Ajustes → Hinos baixados*
   mostra o total, e *Apagar hinos baixados* libera tudo: as letras continuam no
   app, e o áudio volta a ser baixado quando tocar.
+- **Quem já tem os hinos no celular aponta para a pasta** (a do LouvorJA
+  copiada do PC), como no Louvor JA: o app indexa e toca direto de lá, sem
+  baixar nada, e diz quantos hinos e playbacks encontrou. A seção é o mesmo
+  componente nos dois apps (`lib/telas/secao_pasta.dart`).
 - **A tela inicial é a lista de hinos**, com a engrenagem dos Ajustes na barra
-  de busca. Os Ajustes têm só espaço, "baixar um hinário inteiro" (opcional,
-  com o tamanho antes de começar), atualização e créditos — nada de pasta
-  copiada do PC, URL de servidor ou voz da Bíblia.
+  de busca. Os Ajustes têm só a pasta, o espaço ocupado, "baixar um hinário
+  inteiro" (opcional, com o tamanho antes de começar), atualização e créditos —
+  nada de URL de servidor ou voz da Bíblia.
 - **Sem sincronização com a API do acervo**, que traria os álbuns das
   coletâneas para dentro do catálogo.
 

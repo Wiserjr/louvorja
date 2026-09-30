@@ -6,10 +6,10 @@ import '../dados/pacote_fundos.dart';
 import '../dados/repositorio.dart';
 import '../dados/sincronizacao.dart';
 import 'atualizacao_app.dart';
+import 'secao_pasta.dart';
 import 'tela_downloads.dart';
 import 'tela_audio_biblia.dart';
 import 'tela_voz.dart';
-import '../dados/midia.dart';
 
 class TelaAjustes extends StatefulWidget {
   const TelaAjustes({super.key, this.aoMudarPasta});
@@ -21,10 +21,6 @@ class TelaAjustes extends StatefulWidget {
 }
 
 class _TelaAjustesState extends State<TelaAjustes> {
-  String? _pasta;
-  int _indexados = 0;
-  bool _indexando = false;
-
   final _urlCtrl = TextEditingController();
   ResultadoTeste? _teste;
   bool _testando = false;
@@ -43,7 +39,6 @@ class _TelaAjustesState extends State<TelaAjustes> {
   ({int presentes, int total})? _fundos;
 
   Diagnostico? _diag;
-  ({int encontradas, int total})? _cobertura;
   bool _sincronizando = false;
   String _etapa = '';
   double? _progresso;
@@ -52,9 +47,6 @@ class _TelaAjustesState extends State<TelaAjustes> {
   @override
   void initState() {
     super.initState();
-    Midia.instancia.raiz.then((v) {
-      if (mounted) setState(() => _pasta = v);
-    });
     Download.instancia.urlBase.then((v) {
       if (mounted) _urlCtrl.text = v;
     });
@@ -65,7 +57,6 @@ class _TelaAjustesState extends State<TelaAjustes> {
     });
     _atualizarEspaco();
     _verificarCatalogo();
-    _medirCobertura();
     _conferirFundos();
   }
 
@@ -89,12 +80,6 @@ class _TelaAjustesState extends State<TelaAjustes> {
   void dispose() {
     _urlCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _medirCobertura() async {
-    if (await Midia.instancia.raiz == null) return;
-    final c = await Midia.instancia.cobertura();
-    if (mounted) setState(() => _cobertura = c);
   }
 
   Future<void> _verificarCatalogo() async {
@@ -138,54 +123,6 @@ class _TelaAjustesState extends State<TelaAjustes> {
         _ondeGrava = onde;
       });
     }
-  }
-
-  Future<void> _escolher() async {
-    final ok = await Midia.instancia.escolherPasta();
-    if (!ok || !mounted) return;
-
-    setState(() {
-      _pasta = null;
-      _indexando = true;
-      _indexados = 0;
-    });
-    Midia.instancia.raiz.then(
-      (v) => mounted ? setState(() => _pasta = v) : null,
-    );
-
-    final total = await Midia.instancia.indexar(
-      aoProgredir: (n) => mounted ? setState(() => _indexados = n) : null,
-    );
-    if (mounted) {
-      setState(() {
-        _indexando = false;
-        _indexados = total;
-      });
-    }
-    await _medirCobertura();
-    await widget.aoMudarPasta?.call();
-  }
-
-  /// Refaz a varredura da mesma pasta.
-  ///
-  /// Necessário depois de copiar mais álbuns: o índice é um retrato do momento
-  /// da escolha, não um observador do sistema de arquivos.
-  Future<void> _reindexar() async {
-    setState(() {
-      _indexando = true;
-      _indexados = 0;
-    });
-    final total = await Midia.instancia.indexar(
-      aoProgredir: (n) => mounted ? setState(() => _indexados = n) : null,
-    );
-    if (mounted) {
-      setState(() {
-        _indexando = false;
-        _indexados = total;
-      });
-    }
-    await _medirCobertura();
-    await widget.aoMudarPasta?.call();
   }
 
   Future<void> _testar() async {
@@ -303,64 +240,7 @@ class _TelaAjustesState extends State<TelaAjustes> {
           ),
           const Divider(height: 32),
           const _Titulo('Fonte principal: pasta copiada'),
-          ListTile(
-            leading: const Icon(Icons.folder_outlined),
-            title: const Text('Pasta das músicas'),
-            subtitle: Text(
-              _pasta == null
-                  ? 'Nenhuma pasta escolhida'
-                  : Uri.decodeFull(_pasta!).split('/').last,
-            ),
-            trailing: FilledButton.tonal(
-              onPressed: _indexando ? null : _escolher,
-              child: Text(_pasta == null ? 'Escolher' : 'Trocar'),
-            ),
-          ),
-          if (_cobertura != null && !_indexando)
-            ListTile(
-              leading: Icon(
-                _cobertura!.encontradas == 0
-                    ? Icons.error_outline
-                    : _cobertura!.encontradas < _cobertura!.total
-                    ? Icons.info_outline
-                    : Icons.check_circle_outline,
-              ),
-              title: Text(
-                '${_cobertura!.encontradas} de ${_cobertura!.total} faixas '
-                'encontradas na pasta',
-              ),
-              // Quando a conta não fecha, o motivo quase sempre é o nível de
-              // pasta escolhido ou uma cópia parcial — dizer isso poupa o
-              // usuário de adivinhar.
-              subtitle: Text(
-                _cobertura!.encontradas == 0
-                    ? 'Nenhuma. Confira se apontou a pasta que contém "musics" '
-                          'ou "musicas", e refaça a varredura.'
-                    : _cobertura!.encontradas < _cobertura!.total
-                    ? 'O resto pode ser baixado, ou copiado depois para a mesma '
-                          'pasta. Refaça a varredura após copiar.'
-                    : 'A pasta cobre todo o catálogo.',
-              ),
-              trailing: TextButton(
-                onPressed: _indexando ? null : _reindexar,
-                child: const Text('Varrer'),
-              ),
-            ),
-          if (_indexando)
-            ListTile(
-              leading: const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              title: const Text('Indexando a pasta...'),
-              subtitle: Text('$_indexados arquivos'),
-            )
-          else if (_indexados > 0)
-            ListTile(
-              leading: const Icon(Icons.check_circle_outline),
-              title: Text('$_indexados arquivos indexados'),
-            ),
+          SecaoPastaMusicas(aoMudarPasta: widget.aoMudarPasta),
 
           const Divider(height: 32),
           const _Titulo('Fonte alternativa: download'),

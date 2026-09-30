@@ -217,12 +217,15 @@ class Repositorio {
   }
 
   /// Todos os caminhos de áudio do catálogo, para medir a cobertura da pasta.
-  Future<List<String>> caminhosDeAudio() async {
+  ///
+  /// [playback] troca as faixas cantadas pelas instrumentais.
+  Future<List<String>> caminhosDeAudio({bool playback = false}) async {
+    final coluna = playback ? 'audio_pb' : 'audio';
     final db = await Banco.catalogo;
     final r = await db.rawQuery(
-      'SELECT audio FROM musicas WHERE audio IS NOT NULL',
+      'SELECT $coluna AS c FROM musicas WHERE $coluna IS NOT NULL',
     );
-    return r.map((m) => m['audio']! as String).toList();
+    return r.map((m) => m['c']! as String).toList();
   }
 
   // ---------- Coletâneas on-line ----------

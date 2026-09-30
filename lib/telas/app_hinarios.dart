@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../dados/download.dart';
 import 'atualizacao_app.dart';
+import 'secao_pasta.dart';
 import 'tela_downloads.dart';
 import 'tela_hinarios.dart';
 
@@ -134,6 +135,23 @@ class _TelaAjustesHinariosState extends State<TelaAjustesHinarios> {
       appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         children: [
+          // Primeiro porque, para quem já tem os hinos no celular, é a opção
+          // que mais economiza espaço: nada é baixado de novo.
+          const _Titulo('Hinos que você já tem'),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: Text(
+              'Se os hinos já estão no celular — por exemplo, a pasta do '
+              'LouvorJA copiada do computador —, aponte para ela: eles tocam '
+              'direto de lá, sem baixar nada.',
+            ),
+          ),
+          const SecaoPastaMusicas(
+            itens: 'hinos',
+            masculino: true,
+            contarPlayback: true,
+          ),
+
           const _Titulo('Espaço no aparelho'),
           ListTile(
             leading: const Icon(Icons.sd_storage_outlined),
@@ -143,7 +161,8 @@ class _TelaAjustesHinariosState extends State<TelaAjustesHinarios> {
                   ? 'Calculando…'
                   : bytes == 0
                   ? 'Nenhum. Os hinos são baixados quando você toca.'
-                  : '${_tamanho(bytes)} — só os hinos que você tocou ou baixou',
+                  : '${_tamanho(bytes)} — só os que o app baixou; os da pasta '
+                        'escolhida não entram nesta conta',
             ),
           ),
           ListTile(

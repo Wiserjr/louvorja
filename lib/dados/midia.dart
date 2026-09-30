@@ -164,8 +164,14 @@ class Midia {
   /// "a pasta que eu copiei está certa?". Comparar em memória é o caminho —
   /// catálogo e índice vivem em bancos separados, então não há join possível, e
   /// 1.889 comparações de string custam milissegundos.
-  Future<({int encontradas, int total})> cobertura() async {
-    final caminhos = await const Repositorio().caminhosDeAudio();
+  ///
+  /// [playback] mede as faixas instrumentais em vez das cantadas.
+  Future<({int encontradas, int total})> cobertura({
+    bool playback = false,
+  }) async {
+    final caminhos = await const Repositorio().caminhosDeAudio(
+      playback: playback,
+    );
     final db = await Banco.usuario;
     final chaves = {
       for (final r in await db.query('midia', columns: ['chave']))
