@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'dados/midia.dart';
+import 'telas/atualizacao_app.dart';
 import 'telas/tela_albuns.dart';
 import 'telas/tela_biblia.dart';
 import 'telas/tela_hinarios.dart';
@@ -50,6 +51,11 @@ class _InicioState extends State<Inicio> {
   void initState() {
     super.initState();
     _verificarMidia();
+    // Depois do primeiro quadro: o diálogo de atualização precisa de uma tela
+    // montada por baixo. Silenciosa — só aparece se houver versão nova.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) FluxoAtualizacao.verificar(context);
+    });
   }
 
   Future<void> _verificarMidia() async {

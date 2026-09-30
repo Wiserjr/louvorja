@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -9,6 +11,19 @@ plugins {
 // de substituí-lo. Cada um fica com seus próprios ajustes e downloads. Sem a
 // opção, o build é exatamente o de sempre.
 val paralelo = project.findProperty("paralelo")?.toString() == "true"
+
+// Chave de assinatura fixa, lida de android/key.properties (fora do git).
+//
+// A atualização automática só entra por cima se o APK novo for assinado com a
+// MESMA chave do instalado — senão o Android recusa, e a única saída é
+// desinstalar, o que apaga as músicas baixadas. Sem key.properties o release
+// sai com a chave de debug da máquina que compilou: funciona enquanto se
+// publicar sempre do mesmo PC, e quebra para todo mundo no dia em que o PC
+// mudar. Ver "Chave de assinatura" no README.
+val chave = Properties().apply {
+    val arquivo = rootProject.file("key.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
+}
 
 android {
     namespace = "br.com.wisejr.louvorja"
@@ -37,11 +52,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (chave.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = file(chave.getProperty("storeFile"))
+                storePassword = chave.getProperty("storePassword")
+                keyAlias = chave.getProperty("keyAlias")
+                keyPassword = chave.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 }

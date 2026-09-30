@@ -6,13 +6,27 @@ sincronizada, Bíblia e as coletâneas on-line.
 Baixe o APK da arquitetura do seu aparelho e abra o arquivo no celular. Será
 preciso permitir a instalação de "fontes desconhecidas" para este app.
 
-| Arquivo | Para |
-|---|---|
-| `app-arm64-v8a-release.apk` | praticamente todo celular atual |
-| `app-armeabi-v7a-release.apk` | aparelhos antigos, 32 bits |
-| `app-x86_64-release.apk` | emuladores |
+São dois apps, que podem ser instalados lado a lado:
+
+| Arquivo | App | Para |
+|---|---|---|
+| `louvorja-arm64-v8a.apk` | Louvor JA | praticamente todo celular atual |
+| `louvorja-armeabi-v7a.apk` | Louvor JA | aparelhos antigos, 32 bits |
+| `hinarios-arm64-v8a.apk` | Hinários | praticamente todo celular atual |
+| `hinarios-armeabi-v7a.apk` | Hinários | aparelhos antigos, 32 bits |
+| `*-x86_64.apk` | — | emuladores |
 
 Na dúvida, use o **arm64-v8a**.
+
+## Atualização automática
+
+A partir desta versão o app **se atualiza sozinho**: ao abrir, ele confere se
+há versão nova e oferece baixar. A instalação sempre pede a sua confirmação e
+entra por cima da atual, sem perder as músicas baixadas. Também dá para
+procurar na hora em *Ajustes → Procurar atualização*.
+
+Na primeira vez o Android pede para liberar a instalação de apps por este
+aplicativo; o próprio app abre a tela certa.
 
 ## Para quem tem dificuldade de ler
 

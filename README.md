@@ -369,7 +369,8 @@ Android 36.1, x86_64:
 ## Pendente
 
 - Licenças do Android SDK não aceitas (`flutter doctor --android-licenses`).
-- O release é assinado com a chave de debug; publicar exige chave própria.
+- O release ainda sai com a chave de debug do PC que compila, a menos que exista
+  `android/key.properties` — ver [Chave de assinatura](#chave-de-assinatura).
 - O catálogo embutido é de agosto de 2024 (a API está na versão 184, de julho de
   2026). Atualizá-lo exige regerar o banco a partir de uma instalação recente do
   programa, ou passar a consumir `json_db` direto.
@@ -388,6 +389,74 @@ Ele sai com o identificador `br.com.wisejr.louvorja.hinarios` e o nome
 um tem seus próprios ajustes, catálogo e músicas baixadas, e a chave de
 assinatura de um não interfere na do outro. Sem `-P paralelo=true` o build é
 exatamente o de sempre.
+
+## Atualização automática do app
+
+O app se atualiza sozinho, no mesmo padrão do app de recadastramento: ninguém
+precisa mandar APK por WhatsApp a cada versão.
+
+1. **Ao abrir**, o app consulta o manifesto da última release:
+   `https://github.com/Wiserjr/louvorja/releases/latest/download/atualizacao-{applicationId}.json`.
+   Sem rede ou sem versão nova, nada aparece.
+2. **Havendo versão nova**, oferece atualizar. Na primeira vez o Android pede
+   para liberar a instalação por este app; o app abre a tela e, na volta,
+   continua sozinho.
+3. **Baixa o APK** da arquitetura do aparelho para o cache, com progresso e
+   cancelamento, e confere que o arquivo é um APK legível, do mesmo app e da
+   versão anunciada.
+4. **Entrega ao instalador do sistema** (`PackageInstaller`), que mostra a
+   confirmação. Se o app estiver em segundo plano quando o download termina,
+   uma notificação traz a pessoa de volta.
+
+*Ajustes → Procurar atualização* faz a mesma consulta na hora.
+
+O manifesto é validado com o rigor do recadastramento, porque é por ele que um
+APK entra no aparelho (`interpretarManifesto`, com testes em
+`test/atualizacao_test.dart`): o `applicationId` tem de ser o do app — o Louvor
+JA e o Hinários convivem e um não pode receber o APK do outro —, os links só
+podem apontar para releases deste repositório, redirecionamentos só seguem para
+os hosts do GitHub, e o `versionName` só aceita números e pontos, porque vai
+direto para o diálogo.
+
+**O que isso exige na publicação**, e o `publicar.ps1` já faz:
+
+- compilar os dois apps e publicar um manifesto por app junto com os APKs;
+- **subir o número depois do `+`** no `pubspec.yaml` a cada release — é ele que
+  os apps comparam, e o script recusa publicar se ele não crescer;
+- assinar sempre com a mesma chave (seção seguinte).
+
+Com `--split-per-abi` o Flutter soma 1000 × a arquitetura ao versionCode (o
+`+10` vira 2010 no arm64). Os apps comparam só a base, o resto da divisão por
+1000, então ela precisa ficar abaixo de 1000.
+
+## Chave de assinatura
+
+A atualização só entra por cima se o APK novo for assinado com **a mesma chave**
+do instalado. Com chave diferente o Android recusa, e a única saída é
+desinstalar — o que apaga as músicas baixadas pelo app.
+
+Sem `android/key.properties`, o release sai com a chave de debug do PC que
+compila (`%USERPROFILE%\.android\debug.keystore`). É assim que as releases até
+aqui foram assinadas, e funciona **enquanto se publicar sempre do mesmo PC**:
+formatar o PC ou publicar de outro gera outra chave e quebra a atualização de
+todo mundo. Para fixar a chave, crie `android/key.properties` (ele e os
+`.keystore`/`.jks` já estão no `.gitignore`):
+
+```properties
+storeFile=C:/Users/SEU_USUARIO/.android/debug.keystore
+storePassword=android
+keyAlias=androiddebugkey
+keyPassword=android
+```
+
+Apontar para o próprio `debug.keystore` mantém as instalações atuais
+recebendo atualização. Guarde uma cópia dele fora do PC: perdê-lo significa que
+ninguém recebe mais atualização sem reinstalar. A alternativa — uma chave de
+release nova, com `keytool -genkeypair` — é o caminho "de manual", mas exige
+que todos reinstalem uma vez.
+
+Um APK compilado em outra máquina (como os de teste) tem outra chave: ele
+instala, mas as atualizações oficiais não entram por cima dele.
 
 ## Publicar e compartilhar
 

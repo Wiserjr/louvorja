@@ -5,6 +5,7 @@ import '../dados/download.dart';
 import '../dados/pacote_fundos.dart';
 import '../dados/repositorio.dart';
 import '../dados/sincronizacao.dart';
+import 'atualizacao_app.dart';
 import 'tela_downloads.dart';
 import 'tela_audio_biblia.dart';
 import 'tela_voz.dart';
@@ -449,6 +450,16 @@ class _TelaAjustesState extends State<TelaAjustes> {
             // errado justamente quando está tentando saber se atualizou.
             subtitle: Text(_versaoApp ?? '—'),
           ),
+          ListTile(
+            leading: const Icon(Icons.system_update_outlined),
+            title: const Text('Procurar atualização'),
+            // A abertura do app já procura sozinha; isto é para quem ouviu
+            // falar de uma versão nova e não quer esperar a próxima abertura.
+            subtitle: const Text(
+              'O app baixa a versão nova e pede a sua confirmação',
+            ),
+            onTap: () => FluxoAtualizacao.verificar(context, manual: true),
+          ),
 
           // A atribuição da Bíblia Livre não é cortesia: a licença Creative
           // Commons que permite embarcá-la no app a exige. Os autores aceitam
@@ -486,7 +497,9 @@ class _TelaAjustesState extends State<TelaAjustes> {
       valueListenable: PacoteFundos.instancia.estado,
       builder: (context, est, _) {
         final rodando = est.etapa != Etapa.parado;
-        final faltam = _fundos == null ? null : _fundos!.total - _fundos!.presentes;
+        final faltam = _fundos == null
+            ? null
+            : _fundos!.total - _fundos!.presentes;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
