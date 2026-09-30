@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// App paralelo: `flutter build apk -P paralelo=true` gera um segundo app, com
+// outro identificador e outro nome, que se instala AO LADO do Louvor JA em vez
+// de substituí-lo. Cada um fica com seus próprios ajustes e downloads. Sem a
+// opção, o build é exatamente o de sempre.
+val paralelo = project.findProperty("paralelo")?.toString() == "true"
+
 android {
     namespace = "br.com.wisejr.louvorja"
     compileSdk = flutter.compileSdkVersion
@@ -16,7 +22,9 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "br.com.wisejr.louvorja"
+        applicationId =
+            if (paralelo) "br.com.wisejr.louvorja.hinarios" else "br.com.wisejr.louvorja"
+        manifestPlaceholders["rotulo"] = if (paralelo) "Hinários" else "louvorja"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

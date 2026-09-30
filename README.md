@@ -374,6 +374,21 @@ Android 36.1, x86_64:
   2026). Atualizá-lo exige regerar o banco a partir de uma instalação recente do
   programa, ou passar a consumir `json_db` direto.
 
+## App paralelo: Hinários
+
+O mesmo código gera um segundo app, que se instala **ao lado** do Louvor JA em
+vez de substituí-lo:
+
+```bash
+flutter build apk --release --split-per-abi -P paralelo=true
+```
+
+Ele sai com o identificador `br.com.wisejr.louvorja.hinarios` e o nome
+**Hinários** na tela do celular. Para o Android são apps diferentes, então cada
+um tem seus próprios ajustes, catálogo e músicas baixadas, e a chave de
+assinatura de um não interfere na do outro. Sem `-P paralelo=true` o build é
+exatamente o de sempre.
+
 ## Publicar e compartilhar
 
 O repositório é privado. Para enviar ao GitHub e criar a release com os APKs:
