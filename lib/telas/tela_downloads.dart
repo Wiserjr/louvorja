@@ -24,6 +24,11 @@ class _TelaDownloadsState extends State<TelaDownloads> {
   bool _carregandoListas = true;
   bool _calculando = false;
 
+  /// Quais arquivos de cada música entram no lote. Começa só no cantado, como
+  /// era antes de o playback existir aqui: quem não precisa dele não deve
+  /// baixar o dobro sem perceber.
+  Set<_Arquivo> _tipos = {_Arquivo.cantado};
+
   @override
   void initState() {
     super.initState();
@@ -59,12 +64,27 @@ class _TelaDownloadsState extends State<TelaDownloads> {
     }
 
     final mensageiro = ScaffoldMessenger.of(context);
+    // Lido antes da consulta: o lote é o que estava escolhido no toque.
+    final tipos = _tipos;
     setState(() => _calculando = true);
-    final todas = await buscar();
-    final falta = await _fila.pendentes(todas);
+    final todos = FilaDownload.itensDe(
+      await buscar(),
+      cantado: tipos.contains(_Arquivo.cantado),
+      playback: tipos.contains(_Arquivo.playback),
+    );
+    final falta = await _fila.pendentes(todos);
     if (!mounted) return;
     setState(() => _calculando = false);
 
+    if (todos.isEmpty) {
+      // Acontece ao pedir só o playback de um álbum que não tem nenhum.
+      mensageiro.showSnackBar(
+        SnackBar(
+          content: Text('$rotulo: não há ${_descricao(tipos)} no acervo.'),
+        ),
+      );
+      return;
+    }
     if (falta.isEmpty) {
       mensageiro.showSnackBar(
         SnackBar(content: Text('$rotulo: tudo já está no aparelho.')),
@@ -81,13 +101,22 @@ class _TelaDownloadsState extends State<TelaDownloads> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${falta.length} faixas a baixar, cerca de '
+              '${falta.length} arquivos a baixar, cerca de '
               '${_tamanho(FilaDownload.bytesDe(falta))}.',
             ),
+            // Com os dois tipos, diz quanto é de cada: o total sozinho não
+            // mostra que um deles já estava quase todo no aparelho.
+            if (tipos.length > 1) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${falta.where((i) => !i.playback).length} cantados e '
+                '${falta.where((i) => i.playback).length} playbacks.',
+              ),
+            ],
             const SizedBox(height: 10),
             Text(
-              'De ${todas.length} no total, '
-              '${todas.length - falta.length} já estão no aparelho.',
+              'De ${todos.length} no total, '
+              '${todos.length - falta.length} já estão no aparelho.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             if (falta.length > 200) ...[
@@ -141,6 +170,7 @@ class _TelaDownloadsState extends State<TelaDownloads> {
                 ],
               ),
             ),
+          _escolhaDeTipos(),
           Expanded(child: _carregandoListas ? _esqueleto() : _opcoes()),
         ],
       ),
@@ -148,6 +178,47 @@ class _TelaDownloadsState extends State<TelaDownloads> {
   }
 
   Widget _esqueleto() => const Center(child: CircularProgressIndicator());
+
+  /// O que foi escolhido, por extenso, para as mensagens.
+  static String _descricao(Set<_Arquivo> tipos) => tipos.length > 1
+      ? 'áudio'
+      : tipos.first == _Arquivo.playback
+      ? 'playback'
+      : 'áudio cantado';
+
+  /// Cantado, playback ou os dois. Fica fixo acima da lista, e não rolando com
+  /// ela: a escolha vale para o toque em qualquer linha, e precisa estar à
+  /// vista quando o toque acontece lá embaixo, num álbum qualquer.
+  Widget _escolhaDeTipos() => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+    child: Row(
+      children: [
+        Text('Baixar', style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SegmentedButton<_Arquivo>(
+            multiSelectionEnabled: true,
+            segments: const [
+              ButtonSegment(
+                value: _Arquivo.cantado,
+                label: Text('Cantado'),
+                icon: Icon(Icons.mic),
+              ),
+              ButtonSegment(
+                value: _Arquivo.playback,
+                label: Text('Playback'),
+                icon: Icon(Icons.mic_off),
+              ),
+            ],
+            selected: _tipos,
+            // Trocar durante um lote não o afeta: os arquivos dele foram
+            // definidos ao começar, e um segundo lote só começa depois.
+            onSelectionChanged: (s) => setState(() => _tipos = s),
+          ),
+        ),
+      ],
+    ),
+  );
 
   /// Painel de acompanhamento.
   ///
@@ -332,7 +403,7 @@ class _TelaDownloadsState extends State<TelaDownloads> {
           const SizedBox(height: 6),
           Text(
             'Exemplos: '
-            '${e.falhas.take(3).map((f) => f.musica.nome).join(', ')}'
+            '${e.falhas.take(3).map((f) => f.item.nome).join(', ')}'
             '${e.falhas.length > 3 ? '...' : ''}',
             style: Theme.of(context).textTheme.labelSmall,
           ),
@@ -375,6 +446,9 @@ class _TelaDownloadsState extends State<TelaDownloads> {
     ],
   );
 }
+
+/// Os arquivos que cada música pode ter no acervo.
+enum _Arquivo { cantado, playback }
 
 class _Titulo extends StatelessWidget {
   const _Titulo(this.texto);

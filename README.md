@@ -217,6 +217,17 @@ desse rótulo.
 todo o acervo. O tamanho é estimado antes de começar e conta **apenas o que
 falta** — quem já copiou metade à mão não deve ver 8 GB anunciados.
 
+No topo da tela se escolhe **o que baixar: cantado, playback ou os dois**. O
+padrão é só o cantado, para ninguém baixar o dobro sem perceber. Com os dois,
+cada música entra com a cantada seguida do playback, e não todas as cantadas
+antes de todos os playbacks: interrompido no meio, o lote deixa hinos
+completos, prontos para qualquer dos dois usos. Para os dois hinários são 1.214
+cantados e 1.213 playbacks — só o hino 515 do atual não tem playback.
+
+O catálogo não informa o tamanho dos playbacks, então a estimativa usa o da
+faixa cantada, de duração parecida. O contador de espaço usado, esse, soma
+o tamanho real de cada arquivo gravado.
+
 A fila vive fora das telas (`FilaDownload`), então sair da tela não interrompe um
 lote de centenas de arquivos.
 

@@ -186,14 +186,15 @@ class Repositorio {
     return r.map(Slide.doMapa).toList();
   }
 
-  /// Faixas com áudio publicado, opcionalmente restritas a um álbum ou a uma
-  /// categoria inteira. Base para o download em lote.
+  /// Faixas com áudio publicado — cantado, playback ou os dois —,
+  /// opcionalmente restritas a um álbum ou a uma categoria inteira. Base para
+  /// o download em lote, que escolhe depois quais dos arquivos quer.
   Future<List<Musica>> musicasParaDownload({
     int? idAlbum,
     int? idCategoria,
   }) async {
     final db = await Banco.catalogo;
-    final onde = <String>['m.audio IS NOT NULL'];
+    final onde = <String>['(m.audio IS NOT NULL OR m.audio_pb IS NOT NULL)'];
     final args = <Object?>[];
     if (idAlbum != null) {
       onde.add('am.id_album = ?');
