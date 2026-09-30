@@ -1,5 +1,10 @@
-App Android offline com o acervo do LouvorJA — álbuns, hinários, letra
-sincronizada, Bíblia e as coletâneas on-line.
+Dois apps Android com o acervo do LouvorJA, que podem ser instalados lado a
+lado:
+
+- **Louvor JA** — álbuns, hinários, letra sincronizada, Bíblia e as coletâneas
+  on-line.
+- **Hinários** — só o Hinário Adventista e o de 1996, para quem tem pouco
+  espaço no celular: o APK tem ~20 MB e nada é baixado sem você tocar um hino.
 
 ## Instalação
 
@@ -63,6 +68,22 @@ Não confunda com o **Versão do acervo**, na mesma tela: aquele é o catálogo
 de músicas, não o aplicativo.
 
 ## Nesta versão
+
+- **Atualização automática.** Esta é a última versão que você instala à mão:
+  daqui em diante o app avisa quando houver versão nova, baixa e pede a sua
+  confirmação para instalar. Também em *Ajustes → Procurar atualização*.
+- **App Hinários**, novo: só os dois hinários, com busca por número ou nome,
+  e para cada hino as opções do site app.louvorja.com.br — Cantado, Playback,
+  Sem áudio (slides passados à mão) e Letra. Quem já tem os hinos no celular
+  aponta a pasta em *Ajustes → Hinos que você já tem* e não baixa nada.
+- **Aba Hinários no Louvor JA**, a primeira, com as mesmas opções.
+- **Sem áudio e Letra** no player: passe os slides à mão, ou leia o hino
+  inteiro em estrofes, com letra maior.
+- **Baixar em lote também o playback**, em *Ajustes → Baixar músicas*.
+- **Correção**: depois de apagar as músicas baixadas, o app tentava tocar os
+  arquivos apagados.
+
+## Da versão anterior
 
 - **Controles de reprodução.** Ao abrir uma música por dentro de um álbum, o
   player agora percorre o álbum inteiro: botões de faixa anterior e próxima,
