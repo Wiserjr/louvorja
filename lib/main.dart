@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'app_atual.dart';
 import 'dados/midia.dart';
+import 'telas/app_hinarios.dart';
+import 'telas/atualizacao_app.dart';
 import 'telas/tela_albuns.dart';
 import 'telas/tela_biblia.dart';
+import 'telas/tela_hinarios.dart';
 import 'telas/tela_online.dart';
 import 'telas/tela_ajustes.dart';
 
-void main() => runApp(const AppLouvorJA());
+/// O mesmo código gera dois apps (ver `soHinarios`): o Louvor JA completo e o
+/// Hinários, só com os dois hinários.
+void main() => runApp(soHinarios ? const AppHinarios() : const AppLouvorJA());
 
 class AppLouvorJA extends StatelessWidget {
   const AppLouvorJA({super.key});
@@ -39,6 +45,9 @@ class Inicio extends StatefulWidget {
 }
 
 class _InicioState extends State<Inicio> {
+  /// Posição da aba Ajustes, para onde o aviso de pasta leva.
+  static const _abaAjustes = 4;
+
   int _aba = 0;
   bool? _midiaOk;
 
@@ -46,6 +55,11 @@ class _InicioState extends State<Inicio> {
   void initState() {
     super.initState();
     _verificarMidia();
+    // Depois do primeiro quadro: o diálogo de atualização precisa de uma tela
+    // montada por baixo. Silenciosa — só aparece se houver versão nova.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) FluxoAtualizacao.verificar(context);
+    });
   }
 
   Future<void> _verificarMidia() async {
@@ -55,7 +69,9 @@ class _InicioState extends State<Inicio> {
 
   @override
   Widget build(BuildContext context) {
+    // Os hinários abrem o app: é o que se procura com pressa, na hora do culto.
     final telas = [
+      const TelaHinarios(),
       const TelaAlbuns(),
       const TelaOnline(),
       const TelaBiblia(),
@@ -78,7 +94,7 @@ class _InicioState extends State<Inicio> {
               Material(
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 child: InkWell(
-                  onTap: () => setState(() => _aba = 3),
+                  onTap: () => setState(() => _aba = _abaAjustes),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -109,6 +125,11 @@ class _InicioState extends State<Inicio> {
         selectedIndex: _aba,
         onDestinationSelected: (i) => setState(() => _aba = i),
         destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.library_music_outlined),
+            selectedIcon: Icon(Icons.library_music),
+            label: 'Hinários',
+          ),
           NavigationDestination(
             icon: Icon(Icons.album_outlined),
             selectedIcon: Icon(Icons.album),

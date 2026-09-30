@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:saf_util/saf_util.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,7 +91,19 @@ class Midia {
       whereArgs: [caminhoRelativo, sufixo],
       limit: 1,
     );
-    if (cache.isNotEmpty) return cache.first['uri'] as String;
+    if (cache.isNotEmpty) {
+      final uri = cache.first['uri'] as String;
+      // O que veio do download (file://) pode ter sido apagado por "Apagar
+      // hinos/músicas baixadas". Confiar no índice aí faria o player tentar
+      // tocar um arquivo que não existe, e a lista dizer "baixado". Conferir
+      // custa um stat; o content:// da pasta copiada não é conferido aqui,
+      // porque consultar o SAF a cada faixa é justamente o que o índice evita.
+      if (!uri.startsWith('file://') ||
+          await File(Uri.parse(uri).toFilePath()).exists()) {
+        return uri;
+      }
+      await invalidar(caminhoRelativo);
+    }
 
     // 1. pasta escolhida pelo usuário
     final r = await raiz;
@@ -150,8 +164,14 @@ class Midia {
   /// "a pasta que eu copiei está certa?". Comparar em memória é o caminho —
   /// catálogo e índice vivem em bancos separados, então não há join possível, e
   /// 1.889 comparações de string custam milissegundos.
-  Future<({int encontradas, int total})> cobertura() async {
-    final caminhos = await const Repositorio().caminhosDeAudio();
+  ///
+  /// [playback] mede as faixas instrumentais em vez das cantadas.
+  Future<({int encontradas, int total})> cobertura({
+    bool playback = false,
+  }) async {
+    final caminhos = await const Repositorio().caminhosDeAudio(
+      playback: playback,
+    );
     final db = await Banco.usuario;
     final chaves = {
       for (final r in await db.query('midia', columns: ['chave']))

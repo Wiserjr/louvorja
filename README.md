@@ -150,6 +150,48 @@ leva ao cartão de imagem.
 **Compartilhar como texto** também, com a referência e a sigla da tradução. E no
 player, o título ou a letra inteira da música.
 
+## Hinários
+
+A primeira aba reúne os dois hinários adventistas — o atual (601 hinos) e o de
+1996 (613) — na forma do site [app.louvorja.com.br](https://app.louvorja.com.br/):
+um seletor entre as duas edições, a busca por número ou nome e, para cada hino,
+as mesmas opções do menu de lá.
+
+| No site | No app |
+|---|---|
+| Executar → Cantado | toca a gravação com as vozes, com a letra sincronizada |
+| Executar → Playback | toca só o acompanhamento, com os tempos de letra próprios dele (`ms_pb`) |
+| Executar → Sem Áudio | os slides na tela, passados à mão |
+| Executar → Letra | o hino inteiro em estrofes, para ler, com tamanho ajustável |
+| Arquivo Cantado / Playback | baixa o MP3 para usar sem internet |
+
+Os hinários continuam aparecendo na aba Álbuns; a aba própria existe porque o
+uso é outro. No culto se procura o hino **pelo número anunciado**, e a pergunta
+seguinte é *como* cantá-lo.
+
+- **Busca por número** casa pelo começo e estreita enquanto se digita: "4"
+  mostra o 4 e os 40; "43" põe o 43 no topo, seguido de 430 a 439. Enter com um
+  número exato abre o hino direto.
+- **Busca por nome** ignora acento, caixa e pontuação — os títulos são
+  irregulares entre as edições ("Ó, Adorai o Senhor" em 1996, "Ó Adorai o
+  Senhor" no atual) — e aceita as palavras em qualquer ordem.
+- **O hinário escolhido é lembrado**: quem usa o de 1996 na sua igreja não
+  precisa escolhê-lo toda vez. O termo digitado vale nos dois, então dá para
+  comparar as edições com um toque.
+- **Cantado e Playback baixam o que falta e tocam em seguida.** O MP3 fica no
+  aparelho para a próxima vez. O menu do hino diz antes do toque se vai tocar
+  na hora ou baixar primeiro, com o tamanho.
+- **A letra na leitura vem dividida em estrofes.** O acervo separa as estrofes
+  com um slide de texto vazio que a projeção não exibe (`exibe_slide = 0`); a
+  tela de leitura lê todas as linhas justamente para aproveitar essa divisão.
+
+O player ganhou o modo sem áudio para todo o acervo, não só os hinos. Ele
+também assume quando o áudio não está no aparelho: antes a tela ficava parada
+no instante zero, sem verso nenhum; agora a letra pode ser passada à mão
+enquanto o aviso oferece baixar e tocar. O modo escolhido — cantado, playback
+ou sem áudio — vale para a fila inteira, porque quem canta com o playback quer
+o playback também no hino seguinte.
+
 ## Busca
 
 O campo no topo da aba Álbuns varre o acervo inteiro: devolve **álbuns e
@@ -174,6 +216,17 @@ desse rótulo.
 **Ajustes → Baixar músicas** permite escolher um álbum, uma categoria inteira ou
 todo o acervo. O tamanho é estimado antes de começar e conta **apenas o que
 falta** — quem já copiou metade à mão não deve ver 8 GB anunciados.
+
+No topo da tela se escolhe **o que baixar: cantado, playback ou os dois**. O
+padrão é só o cantado, para ninguém baixar o dobro sem perceber. Com os dois,
+cada música entra com a cantada seguida do playback, e não todas as cantadas
+antes de todos os playbacks: interrompido no meio, o lote deixa hinos
+completos, prontos para qualquer dos dois usos. Para os dois hinários são 1.214
+cantados e 1.213 playbacks — só o hino 515 do atual não tem playback.
+
+O catálogo não informa o tamanho dos playbacks, então a estimativa usa o da
+faixa cantada, de duração parecida. O contador de espaço usado, esse, soma
+o tamanho real de cada arquivo gravado.
 
 A fila vive fora das telas (`FilaDownload`), então sair da tela não interrompe um
 lote de centenas de arquivos.
@@ -316,10 +369,130 @@ Android 36.1, x86_64:
 ## Pendente
 
 - Licenças do Android SDK não aceitas (`flutter doctor --android-licenses`).
-- O release é assinado com a chave de debug; publicar exige chave própria.
+- O release ainda sai com a chave de debug do PC que compila, a menos que exista
+  `android/key.properties` — ver [Chave de assinatura](#chave-de-assinatura).
 - O catálogo embutido é de agosto de 2024 (a API está na versão 184, de julho de
   2026). Atualizá-lo exige regerar o banco a partir de uma instalação recente do
   programa, ou passar a consumir `json_db` direto.
+
+## Dois apps: Louvor JA e Hinários
+
+O mesmo código gera dois apps, que se instalam **lado a lado** (identificadores
+diferentes, cada um com seus ajustes e downloads):
+
+| Flavor | App | Identificador | Catálogo no APK |
+|---|---|---|---|
+| `louvorja` | **Louvor JA**, completo: 75 álbuns, Bíblia, coletâneas on-line | `br.com.wisejr.louvorja` | 27 MB |
+| `hinario` | **Hinários**, só os dois hinários | `br.com.wisejr.louvorja.hinarios` | < 1 MB |
+
+```bash
+flutter run --flavor louvorja
+flutter build apk --release --split-per-abi --flavor hinario
+```
+
+Com os flavors definidos, **todo comando de build ou `run` precisa do
+`--flavor`**; sem ele o Gradle monta os dois e o Flutter não acha o APK. Os
+testes não precisam (`flutter test` roda sem flavor).
+
+O Hinários existe para quem tem pouco espaço no celular e não quer um acervo de
+~15 GB. Não é o Louvor JA com abas escondidas:
+
+- **O APK leva só o catálogo dos hinários** — 1.214 hinos, com letra, tempos e
+  caminhos de áudio, em menos de 1 MB. O catálogo do Louvor JA, as capas e os
+  fundos entram só no flavor `louvorja` (assets condicionais no
+  `pubspec.yaml`). O código da Bíblia e das coletâneas sai no tree-shaking,
+  porque `soHinarios` (`lib/app_atual.dart`) é constante de compilação.
+- **Nada é baixado sem a pessoa tocar um hino.** Cada hino tocado ocupa ~3,5 MB
+  (e o fundo dos slides, algumas centenas de KB). *Ajustes → Hinos baixados*
+  mostra o total, e *Apagar hinos baixados* libera tudo: as letras continuam no
+  app, e o áudio volta a ser baixado quando tocar.
+- **Quem já tem os hinos no celular aponta para a pasta** (a do LouvorJA
+  copiada do PC), como no Louvor JA: o app indexa e toca direto de lá, sem
+  baixar nada, e diz quantos hinos e playbacks encontrou. A seção é o mesmo
+  componente nos dois apps (`lib/telas/secao_pasta.dart`).
+- **A tela inicial é a lista de hinos**, com a engrenagem dos Ajustes na barra
+  de busca. Os Ajustes têm só a pasta, o espaço ocupado, "baixar um hinário
+  inteiro" (opcional, com o tamanho antes de começar), atualização e créditos —
+  nada de URL de servidor ou voz da Bíblia.
+- **Sem sincronização com a API do acervo**, que traria os álbuns das
+  coletâneas para dentro do catálogo.
+
+O catálogo do Hinários sai do catálogo do Louvor JA:
+
+```bash
+python ferramentas/build_hinario.py
+```
+
+Rode sempre que regerar o `assets/louvorja_pt.db.gz`. A saída é determinística:
+sem mudança no catálogo, o `assets/hinario.db.gz` sai idêntico.
+
+## Atualização automática do app
+
+O app se atualiza sozinho, no mesmo padrão do app de recadastramento: ninguém
+precisa mandar APK por WhatsApp a cada versão.
+
+1. **Ao abrir**, o app consulta o manifesto da última release:
+   `https://github.com/Wiserjr/louvorja/releases/latest/download/atualizacao-{applicationId}.json`.
+   Sem rede ou sem versão nova, nada aparece.
+2. **Havendo versão nova**, oferece atualizar. Na primeira vez o Android pede
+   para liberar a instalação por este app; o app abre a tela e, na volta,
+   continua sozinho.
+3. **Baixa o APK** da arquitetura do aparelho para o cache, com progresso e
+   cancelamento, e confere que o arquivo é um APK legível, do mesmo app e da
+   versão anunciada.
+4. **Entrega ao instalador do sistema** (`PackageInstaller`), que mostra a
+   confirmação. Se o app estiver em segundo plano quando o download termina,
+   uma notificação traz a pessoa de volta.
+
+*Ajustes → Procurar atualização* faz a mesma consulta na hora.
+
+O manifesto é validado com o rigor do recadastramento, porque é por ele que um
+APK entra no aparelho (`interpretarManifesto`, com testes em
+`test/atualizacao_test.dart`): o `applicationId` tem de ser o do app — o Louvor
+JA e o Hinários convivem e um não pode receber o APK do outro —, os links só
+podem apontar para releases deste repositório, redirecionamentos só seguem para
+os hosts do GitHub, e o `versionName` só aceita números e pontos, porque vai
+direto para o diálogo.
+
+**O que isso exige na publicação**, e o `publicar.ps1` já faz:
+
+- compilar os dois apps e publicar um manifesto por app junto com os APKs;
+- **subir o número depois do `+`** no `pubspec.yaml` a cada release — é ele que
+  os apps comparam, e o script recusa publicar se ele não crescer;
+- assinar sempre com a mesma chave (seção seguinte).
+
+Com `--split-per-abi` o Flutter soma 1000 × a arquitetura ao versionCode (o
+`+10` vira 2010 no arm64). Os apps comparam só a base, o resto da divisão por
+1000, então ela precisa ficar abaixo de 1000.
+
+## Chave de assinatura
+
+A atualização só entra por cima se o APK novo for assinado com **a mesma chave**
+do instalado. Com chave diferente o Android recusa, e a única saída é
+desinstalar — o que apaga as músicas baixadas pelo app.
+
+Sem `android/key.properties`, o release sai com a chave de debug do PC que
+compila (`%USERPROFILE%\.android\debug.keystore`). É assim que as releases até
+aqui foram assinadas, e funciona **enquanto se publicar sempre do mesmo PC**:
+formatar o PC ou publicar de outro gera outra chave e quebra a atualização de
+todo mundo. Para fixar a chave, crie `android/key.properties` (ele e os
+`.keystore`/`.jks` já estão no `.gitignore`):
+
+```properties
+storeFile=C:/Users/SEU_USUARIO/.android/debug.keystore
+storePassword=android
+keyAlias=androiddebugkey
+keyPassword=android
+```
+
+Apontar para o próprio `debug.keystore` mantém as instalações atuais
+recebendo atualização. Guarde uma cópia dele fora do PC: perdê-lo significa que
+ninguém recebe mais atualização sem reinstalar. A alternativa — uma chave de
+release nova, com `keytool -genkeypair` — é o caminho "de manual", mas exige
+que todos reinstalem uma vez.
+
+Um APK compilado em outra máquina (como os de teste) tem outra chave: ele
+instala, mas as atualizações oficiais não entram por cima dele.
 
 ## Publicar e compartilhar
 

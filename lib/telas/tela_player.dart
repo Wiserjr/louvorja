@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import '../dados/modelos.dart';
 import '../dados/repositorio.dart';
 import '../player/sincronia.dart';
+import 'tela_letra.dart';
 
 class TelaPlayer extends StatefulWidget {
   const TelaPlayer({
@@ -20,6 +21,8 @@ class TelaPlayer extends StatefulWidget {
     required this.fila,
     required this.indice,
     required this.nomeAlbum,
+    this.modo = ModoAudio.cantado,
+    this.tocarAoAbrir = false,
   });
 
   /// Abre o player numa música só, sem faixa seguinte.
@@ -27,7 +30,16 @@ class TelaPlayer extends StatefulWidget {
     Key? key,
     required Musica musica,
     required String nomeAlbum,
-  }) : this(key: key, fila: [musica], indice: 0, nomeAlbum: nomeAlbum);
+    ModoAudio modo = ModoAudio.cantado,
+    bool tocarAoAbrir = false,
+  }) : this(
+         key: key,
+         fila: [musica],
+         indice: 0,
+         nomeAlbum: nomeAlbum,
+         modo: modo,
+         tocarAoAbrir: tocarAoAbrir,
+       );
 
   /// As músicas que o player percorre, na ordem em que aparecem na tela de
   /// origem. Sem isto não há "próxima" — e sem próxima não há repetir nem
@@ -39,6 +51,16 @@ class TelaPlayer extends StatefulWidget {
 
   /// Só o nome: a busca global abre o player sem ter o objeto do álbum em mãos.
   final String nomeAlbum;
+
+  /// Com que áudio começar — as opções "Executar" do site, hino a hino.
+  final ModoAudio modo;
+
+  /// Começa a tocar sem esperar o play, baixando o áudio antes se preciso.
+  ///
+  /// É o que acontece quando se escolhe "Cantado" ou "Playback" no menu do
+  /// hino: a escolha já foi o comando. Vindo da lista de um álbum, o toque só
+  /// abre a música, e aí baixar sozinho gastaria dados sem ninguém ter pedido.
+  final bool tocarAoAbrir;
 
   @override
   State<TelaPlayer> createState() => _TelaPlayerState();
@@ -52,10 +74,19 @@ class _TelaPlayerState extends State<TelaPlayer> {
   String? _erro;
   bool _carregando = true;
 
-  /// Faixa instrumental em vez da cantada. O catálogo guarda tempos próprios
-  /// para ela em `ms_pb`, então a letra continua sincronizada.
-  bool _playback = false;
+  /// Cantado, playback ou sem áudio. Vale para a fila inteira: quem está
+  /// cantando com o playback quer o playback também no hino seguinte.
+  late ModoAudio _modo = widget.modo;
   List<Slide> _slides = const [];
+
+  /// Slide mostrado quando não há áudio conduzindo a letra — no modo sem áudio,
+  /// ou enquanto o arquivo não foi baixado. Posição em [_versos].
+  int _manual = 0;
+
+  /// Progresso do download do áudio que falta, de 0 a 1; `null` fora dele.
+  double? _baixando;
+  String? _falhaDownload;
+  CancelToken? _cancelamento;
 
   /// Caminho do fundo atual, resolvido sob demanda e memorizado: são 1.003
   /// imagens e a mesma se repete em vários slides seguidos.
@@ -85,13 +116,36 @@ class _TelaPlayerState extends State<TelaPlayer> {
   Musica get _musica => widget.fila[_ordem[_pos]];
   bool get _temFila => widget.fila.length > 1;
 
+  /// O modo que de fato vale para a música atual: pedir o playback de uma
+  /// faixa que não tem playback toca a cantada, e a tela deve dizer isso.
+  ModoAudio get _modoEfetivo =>
+      _modo == ModoAudio.playback && _musica.audioPlayback == null
+      ? ModoAudio.cantado
+      : _modo;
+
+  /// Arquivo que o modo atual toca, ou `null` no modo sem áudio.
+  String? get _caminhoDoModo => switch (_modoEfetivo) {
+    ModoAudio.cantado => _musica.audio,
+    ModoAudio.playback => _musica.audioPlayback,
+    ModoAudio.semAudio => null,
+  };
+
+  /// Sem áudio tocando, quem avança a letra é a pessoa.
+  bool get _letraManual => !_temAudio;
+
+  /// Os slides que têm o que mostrar. Na navegação manual os vazios só
+  /// custariam um toque a mais: eles existem para limpar a projeção no tempo
+  /// certo, e aqui não há tempo.
+  List<Slide> get _versos =>
+      _slides.where((s) => s.texto.trim().isNotEmpty).toList();
+
   @override
   void initState() {
     super.initState();
     _ordem = List.generate(widget.fila.length, (i) => i);
     _pos = widget.indice.clamp(0, widget.fila.length - 1);
     _player.playerStateStream.listen(_aoMudarEstado);
-    _preparar();
+    _preparar(tocarAoFim: widget.tocarAoAbrir);
   }
 
   /// Avança sozinho quando a faixa termina, conforme o modo escolhido.
@@ -113,12 +167,12 @@ class _TelaPlayerState extends State<TelaPlayer> {
   Future<void> _irPara(int novaPos, {bool tocar = true}) async {
     if (_ordem.isEmpty) return;
     final pos = novaPos % _ordem.length;
+    _pararDownload();
     await _player.stop();
     setState(() {
       _pos = pos < 0 ? pos + _ordem.length : pos;
       _carregando = true;
       _erro = null;
-      _playback = false;
       // Os caches de fundo são por música: a próxima tem as suas imagens.
       _fundos.clear();
       _bytes.clear();
@@ -149,25 +203,38 @@ class _TelaPlayerState extends State<TelaPlayer> {
   Future<void> _preparar({bool tocarAoFim = false}) async {
     try {
       _slides = await _repo.slidesDe(_musica.id);
-      _sinc = Sincronizador(_slides, usarTemposPlayback: _playback);
+      _manual = 0;
+      // Os tempos do playback só valem para o arquivo do playback. Quando a
+      // faixa não tem um e o modo recai na cantada, os tempos são os dela.
+      _sinc = Sincronizador(
+        _slides,
+        usarTemposPlayback: _modoEfetivo == ModoAudio.playback,
+      );
 
       // Sem await: o áudio não precisa esperar as imagens, e cada fundo que
       // chega já dispara o setState de _bytesDoFundo.
       unawaited(_precarregarFundos());
 
-      final caminho = _playback
-          ? (_musica.audioPlayback ?? _musica.audio)
-          : _musica.audio;
+      final caminho = _caminhoDoModo;
 
       // Conferido aqui, não recebido pronto: cada faixa da fila tem o seu
       // arquivo, e a tela de origem só sabia da primeira.
       final uri = caminho == null ? null : await Midia.instancia.uriDe(caminho);
-      _temAudio = uri != null;
+
+      // Só passa a valer depois de o player aceitar o arquivo. Se ele recusar,
+      // a letra continua acessível pela navegação manual em vez de ficar
+      // presa no instante zero de um áudio que não vai tocar.
+      _temAudio = false;
       if (uri != null) {
         // O ExoPlayer lê URIs content:// nativamente — é o que torna o
         // acesso via SAF viável sem copiar os arquivos para dentro do app.
         await _player.setAudioSource(AudioSource.uri(Uri.parse(uri)));
+        _temAudio = true;
         if (tocarAoFim) _player.play();
+      } else if (caminho != null && tocarAoFim) {
+        // Pediram para tocar e o arquivo não está no aparelho: baixa e toca,
+        // como o site faz ao executar um hino.
+        unawaited(_baixarETocar());
       }
     } catch (e) {
       _erro = '$e';
@@ -176,14 +243,93 @@ class _TelaPlayerState extends State<TelaPlayer> {
     }
   }
 
-  Future<void> _alternarPlayback() async {
+  Future<void> _mudarModo(ModoAudio novo) async {
+    // Pedir o que já está valendo não recarrega nada — por exemplo, "cantado"
+    // numa faixa sem playback, que já estava tocando a cantada.
+    if (novo == _modoEfetivo) {
+      _modo = novo;
+      return;
+    }
+    final tocando = _player.playing;
+    _pararDownload();
     setState(() {
-      _playback = !_playback;
+      _modo = novo;
       _carregando = true;
       _erro = null;
     });
     await _player.stop();
-    await _preparar();
+    await _preparar(tocarAoFim: tocando);
+  }
+
+  /// Baixa o arquivo do modo atual e começa a tocar.
+  ///
+  /// Toda troca de faixa ou de modo cancela o download em curso (ver
+  /// [_pararDownload]). Por isso, chegar ao fim sem cancelamento garante que a
+  /// música e o modo ainda são os mesmos de quando ele começou — e o arquivo
+  /// não toma o lugar de outra música que a pessoa escolheu nesse meio-tempo.
+  Future<void> _baixarETocar() async {
+    final caminho = _caminhoDoModo;
+    if (!mounted || caminho == null || _baixando != null) return;
+
+    final cancel = CancelToken();
+    _cancelamento = cancel;
+    setState(() {
+      _baixando = 0;
+      _falhaDownload = null;
+    });
+
+    void falhou(String motivo) {
+      if (!mounted || cancel.cancelado) return;
+      setState(() {
+        _baixando = null;
+        _falhaDownload = motivo;
+      });
+    }
+
+    try {
+      await Download.instancia.baixar(
+        _musica.id,
+        caminho,
+        instrumental: _modoEfetivo == ModoAudio.playback,
+        cancelamento: cancel,
+        aoProgredir: (recebidos, total) {
+          if (!mounted || total <= 0 || cancel.cancelado) return;
+          setState(() => _baixando = recebidos / total);
+        },
+      );
+    } on DownloadCancelado {
+      return;
+    } on FalhaDownload catch (e) {
+      falhou(e.motivo);
+      return;
+    } catch (e) {
+      falhou('$e');
+      return;
+    } finally {
+      if (identical(_cancelamento, cancel)) _cancelamento = null;
+    }
+
+    if (!mounted || cancel.cancelado) return;
+    setState(() {
+      _baixando = null;
+      _carregando = true;
+    });
+    await _preparar(tocarAoFim: true);
+  }
+
+  /// Interrompe o download do áudio, se houver. Chamado a cada troca de faixa
+  /// ou de modo, e ao sair da tela.
+  void _pararDownload() {
+    _cancelamento?.cancelar();
+    _cancelamento = null;
+    _baixando = null;
+    _falhaDownload = null;
+  }
+
+  void _passar(int delta) {
+    final total = _versos.length;
+    if (total == 0) return;
+    setState(() => _manual = (_manual + delta).clamp(0, total - 1));
   }
 
   /// Resolve o fundo de um slide, memorizando o resultado.
@@ -197,6 +343,7 @@ class _TelaPlayerState extends State<TelaPlayer> {
 
   @override
   void dispose() {
+    _cancelamento?.cancelar();
     _player.dispose();
     super.dispose();
   }
@@ -206,6 +353,20 @@ class _TelaPlayerState extends State<TelaPlayer> {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          if (_slides.any((s) => s.texto.trim().isNotEmpty))
+            IconButton(
+              tooltip: 'Letra',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TelaLetra(
+                    musica: _musica,
+                    origem: widget.nomeAlbum.isEmpty ? null : widget.nomeAlbum,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.lyrics_outlined),
+            ),
+          _menuModo(),
           PopupMenuButton<String>(
             tooltip: 'Compartilhar',
             icon: const Icon(Icons.share_outlined),
@@ -241,12 +402,6 @@ class _TelaPlayerState extends State<TelaPlayer> {
                 ),
             ],
           ),
-          if (_musica.audioPlayback != null)
-            IconButton(
-              tooltip: _playback ? 'Ouvindo o playback' : 'Ouvindo a cantada',
-              onPressed: _carregando ? null : _alternarPlayback,
-              icon: Icon(_playback ? Icons.mic_off : Icons.mic),
-            ),
         ],
         title: Text(_musica.nome),
         bottom: PreferredSize(
@@ -261,7 +416,7 @@ class _TelaPlayerState extends State<TelaPlayer> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                Expanded(child: _letra()),
+                Expanded(child: _letraManual ? _letraAMao() : _letra()),
                 if (_erro != null)
                   Padding(
                     padding: const EdgeInsets.all(12),
@@ -272,9 +427,183 @@ class _TelaPlayerState extends State<TelaPlayer> {
                       ),
                     ),
                   ),
-                if (_temAudio) _controles(),
+                // O modo pede áudio e ele não está no aparelho.
+                if (_letraManual && _caminhoDoModo != null) _faltaAudio(),
+                if (_temAudio) _controles() else _controlesManuais(),
               ],
             ),
+    );
+  }
+
+  /// Cantado, playback ou sem áudio — o mesmo trio do menu "Executar" do site.
+  Widget _menuModo() {
+    final atual = _modoEfetivo;
+    return PopupMenuButton<ModoAudio>(
+      tooltip: 'Áudio: ${atual.rotulo}',
+      enabled: !_carregando,
+      icon: Icon(atual.icone),
+      onSelected: _mudarModo,
+      itemBuilder: (context) => [
+        for (final m in ModoAudio.values)
+          CheckedPopupMenuItem(
+            value: m,
+            checked: m == atual,
+            // Nem toda faixa tem playback. Oferecê-lo e tocar a cantada no
+            // lugar seria pior do que mostrar que ele não existe.
+            enabled: m != ModoAudio.playback || _musica.audioPlayback != null,
+            child: Text(m.rotulo),
+          ),
+      ],
+    );
+  }
+
+  /// A letra passada à mão, slide a slide, sobre o mesmo fundo da projeção.
+  ///
+  /// Toque no terço esquerdo volta; no resto da tela, avança — avançar é o
+  /// gesto de quase todo toque, e merece a área maior. Arrastar para o lado faz
+  /// o mesmo, para quem está acostumado a passar fotos.
+  Widget _letraAMao() {
+    final versos = _versos;
+    if (versos.isEmpty) {
+      return const Center(child: Text('Esta música não tem letra cadastrada.'));
+    }
+    final slide = versos[_manual.clamp(0, versos.length - 1)];
+    return LayoutBuilder(
+      builder: (context, limites) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (d) =>
+            _passar(d.localPosition.dx < limites.maxWidth / 3 ? -1 : 1),
+        onHorizontalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v.abs() < 100) return;
+          _passar(v < 0 ? 1 : -1);
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _fundo(slide.imagem ?? _musica.imagem),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _versoProjetado(context, slide),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Aviso de que o áudio do modo atual não está no aparelho, com o botão que
+  /// resolve — e o progresso, enquanto resolve.
+  Widget _faltaAudio() {
+    final cor = Theme.of(context).colorScheme;
+    final qual = _modoEfetivo == ModoAudio.playback ? 'playback' : 'áudio';
+    final progresso = _baixando;
+    return Material(
+      color: cor.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+        child: progresso != null
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Baixando o $qual…'),
+                        const SizedBox(height: 6),
+                        LinearProgressIndicator(
+                          value: progresso == 0 ? null : progresso,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Cancelar',
+                    onPressed: () => setState(_pararDownload),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Icon(
+                    _falhaDownload == null
+                        ? Icons.cloud_download_outlined
+                        : Icons.error_outline,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _falhaDownload == null
+                          ? 'O $qual desta música não está no aparelho.'
+                          : 'Não foi possível baixar: $_falhaDownload',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _baixarETocar,
+                    child: Text(
+                      _falhaDownload == null
+                          ? 'Baixar e tocar'
+                          : 'Tentar de novo',
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  /// Verso anterior e seguinte, com a posição entre eles; nas pontas, a música
+  /// anterior e a seguinte da fila.
+  Widget _controlesManuais() {
+    final total = _versos.length;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_temFila)
+              IconButton(
+                iconSize: 30,
+                tooltip: 'Música anterior',
+                onPressed: () => _irPara(_pos - 1, tocar: false),
+                icon: const Icon(Icons.skip_previous),
+              ),
+            IconButton.filledTonal(
+              iconSize: 34,
+              tooltip: 'Verso anterior',
+              onPressed: _manual > 0 ? () => _passar(-1) : null,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            SizedBox(
+              width: 76,
+              child: Text(
+                total == 0 ? '—' : '${_manual + 1} de $total',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            IconButton.filledTonal(
+              iconSize: 34,
+              tooltip: 'Próximo verso',
+              onPressed: _manual < total - 1 ? () => _passar(1) : null,
+              icon: const Icon(Icons.chevron_right),
+            ),
+            if (_temFila)
+              IconButton(
+                iconSize: 30,
+                tooltip: 'Próxima música',
+                onPressed: () => _irPara(_pos + 1, tocar: false),
+                icon: const Icon(Icons.skip_next),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -632,6 +961,24 @@ List<int> ordemAleatoria(int total, int atual) {
       if (i != atual) i,
   ]..shuffle();
   return [atual, ...resto];
+}
+
+/// Que áudio acompanha a letra.
+enum ModoAudio {
+  /// A gravação com as vozes.
+  cantado('Cantado', Icons.mic),
+
+  /// Só o acompanhamento, para a congregação cantar por cima. Tem tempos de
+  /// letra próprios no catálogo (`ms_pb`).
+  playback('Playback', Icons.mic_off),
+
+  /// Nenhum áudio: a letra é passada à mão, slide a slide.
+  semAudio('Sem áudio', Icons.slideshow_outlined);
+
+  const ModoAudio(this.rotulo, this.icone);
+
+  final String rotulo;
+  final IconData icone;
 }
 
 /// Como a fila se comporta quando a faixa termina.

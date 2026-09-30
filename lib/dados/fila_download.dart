@@ -1,14 +1,43 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import 'download.dart';
 import 'midia.dart';
 import 'modelos.dart';
 
-/// Uma faixa que não veio, com o motivo.
-class ItemFalhou {
-  const ItemFalhou({required this.musica, required this.motivo});
+/// Um arquivo da fila: o áudio cantado de uma música, ou o playback dela.
+///
+/// A fila trabalha com arquivos, não com músicas, porque a mesma música pode
+/// render dois downloads — e cada um pode falhar, ou já existir, por conta
+/// própria.
+class ItemDownload {
+  const ItemDownload(this.musica, {this.playback = false});
 
   final Musica musica;
+
+  /// Faixa instrumental em vez da cantada.
+  final bool playback;
+
+  String get caminho => playback ? musica.audioPlayback! : musica.audio!;
+
+  /// Como o item aparece no painel e na lista de falhas.
+  String get nome => playback ? '${musica.nome} (playback)' : musica.nome;
+
+  /// Tamanho estimado.
+  ///
+  /// O catálogo só traz o tamanho da faixa cantada. O playback é o mesmo
+  /// arranjo sem as vozes, de duração parecida, então o tamanho da cantada é a
+  /// melhor estimativa disponível — boa para o "cerca de" da confirmação, não
+  /// para a conta do que foi gravado, que usa o arquivo de verdade.
+  int get bytesEstimados => musica.audioBytes ?? 0;
+}
+
+/// Um arquivo que não veio, com o motivo.
+class ItemFalhou {
+  const ItemFalhou({required this.item, required this.motivo});
+
+  final ItemDownload item;
   final String motivo;
 }
 
@@ -127,25 +156,40 @@ class FilaDownload {
 
   bool get rodando => _rodando;
 
+  /// Os arquivos que existem no acervo para [musicas], nos tipos pedidos.
+  ///
+  /// Cada música entra com a cantada seguida do playback, e não todas as
+  /// cantadas antes de todos os playbacks: interrompido no meio, o lote deixa
+  /// hinos completos, prontos para qualquer dos dois usos.
+  static List<ItemDownload> itensDe(
+    List<Musica> musicas, {
+    bool cantado = true,
+    bool playback = false,
+  }) => [
+    for (final m in musicas) ...[
+      if (cantado && m.audio != null) ItemDownload(m),
+      if (playback && m.audioPlayback != null) ItemDownload(m, playback: true),
+    ],
+  ];
+
   /// Descarta o que já existe e devolve só o que falta baixar.
-  Future<List<Musica>> pendentes(List<Musica> musicas) async {
-    final falta = <Musica>[];
-    for (final m in musicas) {
-      if (m.audio == null) continue;
-      if (!await Midia.instancia.existe(m.audio!)) falta.add(m);
+  Future<List<ItemDownload>> pendentes(List<ItemDownload> itens) async {
+    final falta = <ItemDownload>[];
+    for (final i in itens) {
+      if (!await Midia.instancia.existe(i.caminho)) falta.add(i);
     }
     return falta;
   }
 
-  static int bytesDe(List<Musica> musicas) =>
-      musicas.fold(0, (s, m) => s + (m.audioBytes ?? 0));
+  static int bytesDe(List<ItemDownload> itens) =>
+      itens.fold(0, (s, i) => s + i.bytesEstimados);
 
-  Future<void> iniciar(List<Musica> musicas) async {
+  Future<void> iniciar(List<ItemDownload> itens) async {
     if (_rodando) return;
     _rodando = true;
     _cancelamento = CancelToken();
 
-    estado.value = EstadoFila(total: musicas.length, rodando: true);
+    estado.value = EstadoFila(total: itens.length, rodando: true);
 
     var baixadas = 0;
     var bytes = 0;
@@ -153,11 +197,11 @@ class FilaDownload {
     var pausa = _pausaNormal;
     var desacelerou = false;
 
-    for (final m in musicas) {
+    for (final item in itens) {
       if (_cancelamento?.cancelado ?? true) break;
 
       estado.value = estado.value.copiar(
-        atual: m.nome,
+        atual: item.nome,
         progressoAtual: null,
         tentativa: 1,
         aguardando: false,
@@ -167,9 +211,10 @@ class FilaDownload {
       for (var tentativa = 1; tentativa <= _esperas.length + 1; tentativa++) {
         if (_cancelamento?.cancelado ?? true) break;
         try {
-          await Download.instancia.baixar(
-            m.id,
-            m.audio!,
+          final arquivo = await Download.instancia.baixar(
+            item.musica.id,
+            item.caminho,
+            instrumental: item.playback,
             cancelamento: _cancelamento,
             aoProgredir: (recebidos, total) {
               if (total > 0) {
@@ -180,7 +225,7 @@ class FilaDownload {
             },
           );
           baixadas++;
-          bytes += m.audioBytes ?? 0;
+          bytes += await _tamanhoDe(arquivo, item);
           ultima = null;
           break;
         } on DownloadCancelado {
@@ -210,7 +255,7 @@ class FilaDownload {
       }
 
       if (ultima != null) {
-        falhas.add(ItemFalhou(musica: m, motivo: ultima.motivo));
+        falhas.add(ItemFalhou(item: item, motivo: ultima.motivo));
       }
 
       estado.value = estado.value.copiar(
@@ -234,9 +279,21 @@ class FilaDownload {
     );
   }
 
-  /// Repete apenas as faixas que falharam.
+  /// Tamanho gravado de fato, com a estimativa do catálogo como reserva.
+  ///
+  /// O catálogo não traz o tamanho do playback, então somar a estimativa faria
+  /// o contador de espaço usado mentir justamente nos lotes com playback.
+  static Future<int> _tamanhoDe(File arquivo, ItemDownload item) async {
+    try {
+      return await arquivo.length();
+    } on FileSystemException {
+      return item.bytesEstimados;
+    }
+  }
+
+  /// Repete apenas os arquivos que falharam.
   Future<void> repetirFalhas() async {
-    final quais = estado.value.falhas.map((f) => f.musica).toList();
+    final quais = estado.value.falhas.map((f) => f.item).toList();
     if (quais.isEmpty || _rodando) return;
     await iniciar(quais);
   }

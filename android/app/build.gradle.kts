@@ -1,7 +1,22 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Chave de assinatura fixa, lida de android/key.properties (fora do git).
+//
+// A atualização automática só entra por cima se o APK novo for assinado com a
+// MESMA chave do instalado — senão o Android recusa, e a única saída é
+// desinstalar, o que apaga as músicas baixadas. Sem key.properties o release
+// sai com a chave de debug da máquina que compilou: funciona enquanto se
+// publicar sempre do mesmo PC, e quebra para todo mundo no dia em que o PC
+// mudar. Ver "Chave de assinatura" no README.
+val chave = Properties().apply {
+    val arquivo = rootProject.file("key.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
 }
 
 android {
@@ -29,11 +44,43 @@ android {
         versionName = flutter.versionName
     }
 
+    // Dois apps do mesmo código, que se instalam lado a lado (identificadores
+    // diferentes, cada um com seus ajustes e downloads):
+    //
+    //   louvorja  o app completo: 75 álbuns, Bíblia, coletâneas on-line.
+    //   hinario   só os dois hinários, para quem tem pouco espaço. Leva um
+    //             catálogo de ~1 MB em vez de 27 MB (ver pubspec.yaml e
+    //             ferramentas/build_hinario.py).
+    //
+    // flutter build apk --flavor louvorja   /   --flavor hinario
+    flavorDimensions += "app"
+    productFlavors {
+        create("louvorja") {
+            dimension = "app"
+            applicationId = "br.com.wisejr.louvorja"
+            manifestPlaceholders["rotulo"] = "louvorja"
+        }
+        create("hinario") {
+            dimension = "app"
+            applicationId = "br.com.wisejr.louvorja.hinarios"
+            manifestPlaceholders["rotulo"] = "Hinários"
+        }
+    }
+
+    signingConfigs {
+        if (chave.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = file(chave.getProperty("storeFile"))
+                storePassword = chave.getProperty("storePassword")
+                keyAlias = chave.getProperty("keyAlias")
+                keyPassword = chave.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 }

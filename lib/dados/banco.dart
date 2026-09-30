@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../app_atual.dart';
+
 /// Acesso aos dois bancos do app, deliberadamente separados.
 ///
 /// - **catálogo** (`louvorja_pt.db`): álbuns, músicas, letras e Bíblia, extraídos
@@ -17,7 +19,12 @@ import 'package:sqflite/sqflite.dart';
 class Banco {
   Banco._();
 
-  static const _assetCatalogo = 'assets/louvorja_pt.db.gz';
+  /// O Hinários leva só os dois hinários (ferramentas/build_hinario.py), com o
+  /// mesmo esquema: nada abaixo precisa saber qual dos dois abriu.
+  static const _assetCatalogo = soHinarios
+      ? 'assets/hinario.db.gz'
+      : 'assets/louvorja_pt.db.gz';
+  static const _prefixoArquivo = soHinarios ? 'hinario_v' : 'louvorja_pt_v';
 
   /// Incremente para forçar a reinstalação do catálogo na próxima abertura.
   ///
@@ -43,7 +50,7 @@ class Banco {
 
   static Future<Database> _abrirCatalogo() async {
     final dir = await getApplicationSupportDirectory();
-    final destino = p.join(dir.path, 'louvorja_pt_v$versaoCatalogo.db');
+    final destino = p.join(dir.path, '$_prefixoArquivo$versaoCatalogo.db');
     final arquivo = File(destino);
 
     if (!await arquivo.exists()) {
@@ -78,7 +85,7 @@ class Banco {
   ) async {
     await for (final e in dir.list()) {
       if (e is File &&
-          p.basename(e.path).startsWith('louvorja_pt_v') &&
+          p.basename(e.path).startsWith(_prefixoArquivo) &&
           e.path != atual) {
         try {
           await e.delete();

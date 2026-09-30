@@ -3,9 +3,15 @@
          O Flutter so adiciona esta permissao nos manifestos de debug e
          profile; no release ela precisa estar declarada aqui. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Atualizacao automatica (ver Atualizador.kt): o app entrega o APK novo
+         ao instalador do sistema, que sempre pede a confirmacao da pessoa. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- Se o download terminar com o app em segundo plano, a confirmacao so
+         pode ser aberta por uma notificacao (ver InstalacaoReceiver.kt). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:label="louvorja"
+        android:label="${rotulo}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -30,6 +36,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Resultado da instalacao da atualizacao. Declarado aqui, e nao
+             registrado em runtime: o commit() do PackageInstaller exige um
+             PendingIntent MUTAVEL, e mutavel com Intent implicito lanca
+             excecao em targetSdk 34+. exported="false" porque quem o aciona e o
+             proprio sistema, pelo PendingIntent deste app. -->
+        <receiver
+            android:name=".InstalacaoReceiver"
+            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

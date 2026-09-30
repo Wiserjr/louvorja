@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.9+10
+version: 1.0.10+11
 
 environment:
   sdk: ^3.13.0
@@ -70,11 +70,19 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Cada app leva só o seu catálogo (flavors no android/app/build.gradle.kts).
+  # O do Louvor JA tem 27 MB; o do Hinários, ~1 MB. O versiculo_do_dia.json fica
+  # nos dois porque os testes o leem, e são 32 KB.
   assets:
-    - assets/louvorja_pt.db.gz
+    - path: assets/louvorja_pt.db.gz
+      flavors: [louvorja]
+    - path: assets/capas/
+      flavors: [louvorja]
+    - path: assets/fundos/
+      flavors: [louvorja]
+    - path: assets/hinario.db.gz
+      flavors: [hinario]
     - assets/versiculo_do_dia.json
-    - assets/capas/
-    - assets/fundos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
