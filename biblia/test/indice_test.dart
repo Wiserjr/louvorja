@@ -138,7 +138,7 @@ void main() {
 
   group('notas de estudo', () {
     test(
-      'evangelhos, Atos e Romanos têm notas em todos os capítulos',
+      'evangelhos, Atos, Romanos e Coríntios têm notas em todos os capítulos',
       () async {
         for (final (livro, caps) in [
           (40, 28),
@@ -167,6 +167,11 @@ void main() {
     test('Romanos 3:31 tem nota sobre a lei', () async {
       final n = await Estudo.instancia.notas(45, 3, 31);
       expect(n.single.texto, contains('confirmamos a lei'));
+    });
+
+    test('1 Coríntios 15:51 tem nota sobre a ressurreição', () async {
+      final n = await Estudo.instancia.notas(46, 15, 51);
+      expect(n.single.texto, contains('imortalidade'));
     });
   });
 
