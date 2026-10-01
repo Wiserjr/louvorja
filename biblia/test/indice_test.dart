@@ -138,7 +138,7 @@ void main() {
 
   group('notas de estudo', () {
     test(
-      'evangelhos, Atos e as cartas de Romanos a Colossenses têm notas',
+      'evangelhos, Atos e as cartas de Paulo têm notas em todos os capítulos',
       () async {
         for (final (livro, caps) in [
           (40, 28),
@@ -177,6 +177,11 @@ void main() {
     test('Colossenses 2:16 distingue os sábados cerimoniais', () async {
       final n = await Estudo.instancia.notas(51, 2, 16);
       expect(n.single.texto, contains('cerimoniais'));
+    });
+
+    test('1 Tessalonicenses 4:13 trata a morte como sono', () async {
+      final n = await Estudo.instancia.notas(52, 4, 13);
+      expect(n.single.texto, contains('sono'));
     });
   });
 
