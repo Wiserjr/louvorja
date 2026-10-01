@@ -203,8 +203,14 @@ void main() {
       expect(n.single.texto, contains('457 a.C.'));
     });
 
-    test('Gênesis e Êxodo: todos os capítulos; o sábado na criação', () async {
-      for (final (livro, caps) in [(1, 50), (2, 40)]) {
+    test('o Pentateuco tem notas em todos os capítulos', () async {
+      for (final (livro, caps) in [
+        (1, 50),
+        (2, 40),
+        (3, 27),
+        (4, 36),
+        (5, 34),
+      ]) {
         for (var c = 1; c <= caps; c++) {
           final rows = await Banco.instancia.estudo.rawQuery(
             'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
@@ -215,6 +221,11 @@ void main() {
       }
       final n = await Estudo.instancia.notas(1, 2, 3);
       expect(n.single.texto, contains('sábado'));
+    });
+
+    test('Levítico 16 explica o Dia da Expiação e Azazel', () async {
+      final n = await Estudo.instancia.notas(3, 16, 21);
+      expect(n.single.texto, contains('Satanás'));
     });
   });
 
