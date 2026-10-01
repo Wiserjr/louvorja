@@ -7,6 +7,12 @@ Não é uma conversão do `LouvorJA.exe` — aquele é um binário Delphi/VCL Wi
 não tem como virar APK. O que se reaproveita aqui são os **dados**, que já
 estavam numa camada desacoplada do executável.
 
+> A pasta [`biblia/`](biblia/README.md) é outro app, independente deste: a
+> **Bíblia de Estudo** para Android e Windows, que liga cada versículo aos
+> escritos de Ellen G. White e dos pioneiros. Usa as mesmas traduções e o
+> mesmo mecanismo de atualização, e publica em releases `biblia-v*` sem tocar
+> na *latest* deste app.
+
 ## O que vem de onde
 
 | Origem | Destino |
