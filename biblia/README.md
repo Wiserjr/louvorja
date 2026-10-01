@@ -137,8 +137,9 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-Todo o Novo Testamento, de Mateus a Judas, já tem notas (1.315); falta o Apocalipse, escritas para o app em
-`ferramentas/notas/NN-livro.txt`, num formato simples de revisar:
+O Novo Testamento de Mateus a Judas já tem notas (1.315; falta o
+Apocalipse), escritas para o app em `ferramentas/notas/NN-livro.txt`, num
+formato simples de revisar:
 
 ```
 # 4
