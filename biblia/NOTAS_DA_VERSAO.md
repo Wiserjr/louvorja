@@ -26,8 +26,8 @@ anotações.
 - Introdução a cada um dos 66 livros.
 - 18 mapas (Abraão, Êxodo, reinos de Israel e Judá, viagens de Paulo, sete
   igrejas...) e os lugares de cada versículo num minimapa.
-- Notas de estudo nos quatro evangelhos, em Atos, Romanos e 1 e 2 Coríntios
-  (930 notas), com as ligações aos capítulos de Ellen G. White.
+- Notas de estudo nos quatro evangelhos, em Atos e nas cartas de Romanos a
+  Colossenses (1.042 notas), com as ligações aos capítulos de Ellen G. White.
 - Guia sinótico: 173 episódios da vida de Jesus com os quatro evangelhos
   lado a lado e o capítulo de O Desejado de Todas as Nações de cada um.
 - Índice temático com 50 temas e 16 estudos bíblicos em perguntas e

@@ -50,7 +50,7 @@ estudo aberta.
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
 | Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
-| Notas de estudo | 930 (evangelhos, Atos, Romanos, 1 e 2 Coríntios) |
+| Notas de estudo | 1.042 (evangelhos, Atos, Romanos a Colossenses) |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -137,7 +137,7 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-Os quatro evangelhos, Atos, Romanos e 1 e 2 Coríntios já têm notas (930), escritas para o app em
+Os quatro evangelhos, Atos e as cartas de Romanos a Colossenses já têm notas (1.042), escritas para o app em
 `ferramentas/notas/NN-livro.txt`, num formato simples de revisar:
 
 ```

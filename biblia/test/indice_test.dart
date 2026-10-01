@@ -138,7 +138,7 @@ void main() {
 
   group('notas de estudo', () {
     test(
-      'evangelhos, Atos, Romanos e Coríntios têm notas em todos os capítulos',
+      'evangelhos, Atos e as cartas de Romanos a Colossenses têm notas',
       () async {
         for (final (livro, caps) in [
           (40, 28),
@@ -172,6 +172,11 @@ void main() {
     test('1 Coríntios 15:51 tem nota sobre a ressurreição', () async {
       final n = await Estudo.instancia.notas(46, 15, 51);
       expect(n.single.texto, contains('imortalidade'));
+    });
+
+    test('Colossenses 2:16 distingue os sábados cerimoniais', () async {
+      final n = await Estudo.instancia.notas(51, 2, 16);
+      expect(n.single.texto, contains('cerimoniais'));
     });
   });
 
