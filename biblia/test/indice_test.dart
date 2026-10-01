@@ -4,6 +4,7 @@ import 'package:archive/archive.dart';
 import 'package:biblia_estudo/dados/banco.dart';
 import 'package:biblia_estudo/dados/estudo.dart';
 import 'package:biblia_estudo/dados/mapas.dart';
+import 'package:biblia_estudo/dados/sinotico.dart';
 import 'package:biblia_estudo/dados/temas.dart';
 import 'package:biblia_estudo/dados/modelos.dart';
 import 'package:biblia_estudo/dados/trechos.dart';
@@ -132,6 +133,37 @@ void main() {
         ),
         'cap. 17 — Poesias e cânticos',
       );
+    });
+  });
+
+  group('guia sinótico', () {
+    test('episódios em ordem, do prólogo à ascensão', () async {
+      final e = await Sinotico.instancia.eventos();
+      expect(e.length, greaterThan(150));
+      expect(e.first.passagens.keys, [43]);
+      expect(e.last.titulo, contains('ascensão'));
+    });
+
+    test('a tentação está nos três sinóticos e em O Desejado', () async {
+      final e = await Sinotico.instancia.doVersiculo(40, 4, 4);
+      final tentacao = e.firstWhere((x) => x.titulo.contains('tentação'));
+      expect(tentacao.passagens.keys, containsAll([40, 41, 42]));
+      expect(tentacao.leituras.first.obra.sigla, 'DTN');
+      expect(tentacao.leituras.first.capitulo, contains('A tentação'));
+    });
+
+    test('a multiplicação para cinco mil está nos quatro', () async {
+      final e = await Sinotico.instancia.doVersiculo(43, 6, 10);
+      expect(e.single.quantosEvangelhos, 4);
+    });
+
+    test('parábola leva a Parábolas de Jesus', () async {
+      final e = await Sinotico.instancia.doVersiculo(42, 15, 11);
+      expect(e.single.leituras.map((l) => l.obra.sigla), contains('PJ'));
+    });
+
+    test('fora dos evangelhos, nada', () async {
+      expect(await Sinotico.instancia.doVersiculo(1, 1, 1), isEmpty);
     });
   });
 

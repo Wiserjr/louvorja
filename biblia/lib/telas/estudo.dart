@@ -6,12 +6,14 @@ import '../dados/estudo.dart';
 import '../dados/mapas.dart';
 import '../dados/modelos.dart';
 import '../dados/referencias.dart';
+import '../dados/sinotico.dart';
 import '../dados/temas.dart';
 import 'acoes_versiculo.dart';
 import 'biblioteca.dart';
 import 'cartao_trecho.dart';
 import 'mapa_vista.dart';
 import 'mapas.dart';
+import 'sinotico.dart';
 import 'tema.dart';
 import 'temas.dart';
 import 'texto_biblico.dart';
@@ -47,6 +49,7 @@ class _Dados {
     required this.notas,
     required this.lugares,
     required this.temas,
+    required this.eventos,
   });
   final String texto;
   final List<Trecho> trechos;
@@ -54,6 +57,7 @@ class _Dados {
   final List<Nota> notas;
   final List<Lugar> lugares;
   final List<Tema> temas;
+  final List<EventoSinotico> eventos;
 }
 
 class _PainelEstudoState extends State<PainelEstudo> {
@@ -77,6 +81,7 @@ class _PainelEstudoState extends State<PainelEstudo> {
       e.notas(_livro, _cap, _ver),
       Mapas.instancia.doVersiculo(_livro, _cap, _ver),
       Temas.instancia.doVersiculo(_livro, _cap, _ver),
+      Sinotico.instancia.doVersiculo(_livro, _cap, _ver),
     ]);
     final linhas = r[0] as List<(int, int, String)>;
     return _Dados(
@@ -86,6 +91,7 @@ class _PainelEstudoState extends State<PainelEstudo> {
       notas: r[3] as List<Nota>,
       lugares: r[4] as List<Lugar>,
       temas: r[5] as List<Tema>,
+      eventos: r[6] as List<EventoSinotico>,
     );
   }
 
@@ -245,6 +251,30 @@ class _PainelEstudoState extends State<PainelEstudo> {
                 versao: widget.versao,
                 aoIr: widget.aoIr,
               ),
+            ],
+          ),
+        if (d.eventos.isNotEmpty)
+          _Secao(
+            titulo: 'Nos quatro evangelhos',
+            icone: Icons.view_column_outlined,
+            inicialmenteAberta: true,
+            filhos: [
+              for (final e in d.eventos)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: Text(e.titulo),
+                  subtitle: Text(
+                    [
+                      for (final l in evangelhos)
+                        if (e.passagens[l] != null)
+                          '${Referencias.abreviacao(l)} '
+                              '${refCurta(e.passagens[l]!)}',
+                    ].join(' · '),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => abrirEvento(context, e, widget.versao),
+                ),
             ],
           ),
         if (d.lugares.isNotEmpty)

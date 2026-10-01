@@ -34,6 +34,12 @@ Junta num banco só:
     lugar, lugar_ref, mapa, geometria
         lugares bíblicos e mapas temáticos (ver construir_mapas.py)
 
+    sinotico_secao, sinotico_evento, sinotico_ref
+        guia sinótico (harmonia) dos evangelhos (ferramentas/sinotico.json),
+        cada episódio ligado aos capítulos de Ellen G. White que o narram
+        (O Desejado de Todas as Nações, Parábolas de Jesus, História da
+        Redenção), achados pelo índice
+
     tema, tema_ref, tema_egw, estudo, estudo_pergunta
         índice temático e estudos bíblicos (ferramentas/temas.json). As
         leituras de Ellen G. White de cada tema não são escritas à mão: são os
@@ -63,6 +69,7 @@ DESTINO = os.path.join(RAIZ, "assets", "estudo.db.gz")
 INTRODUCOES = os.path.join(PASTA, "introducoes.json")
 MAPAS = os.path.join(CACHE, "mapas.db")
 TEMAS = os.path.join(PASTA, "temas.json")
+SINOTICO = os.path.join(PASTA, "sinotico.json")
 
 URL_REFERENCIAS = "https://a.openbible.info/data/cross-references.zip"
 VOTOS_MINIMOS = 3
@@ -389,6 +396,92 @@ def _leituras(con, tema, refs):
                      for i, ((o, c, p), n) in enumerate(escolhidos)])
 
 
+def sinotico(con, existe):
+    with open(SINOTICO, encoding="utf-8") as f:
+        dados = json.load(f)
+    con.executescript("""
+    CREATE TABLE sinotico_secao (
+      id INTEGER PRIMARY KEY, titulo TEXT NOT NULL
+    );
+    CREATE TABLE sinotico_evento (
+      id INTEGER PRIMARY KEY, secao INTEGER NOT NULL, titulo TEXT NOT NULL
+    );
+    CREATE TABLE sinotico_leitura (
+      evento INTEGER NOT NULL, ordem INTEGER NOT NULL, obra INTEGER NOT NULL,
+      capitulo INTEGER NOT NULL, pagina INTEGER NOT NULL
+    );
+    CREATE TABLE sinotico_ref (
+      evento INTEGER NOT NULL, livro INTEGER NOT NULL, ordem INTEGER NOT NULL,
+      ini INTEGER NOT NULL, fim INTEGER NOT NULL
+    );
+    """)
+    evento_id = 0
+    ligados = 0
+    for si, secao in enumerate(dados, start=1):
+        con.execute("INSERT INTO sinotico_secao VALUES (?,?)",
+                    (si, secao["periodo"]))
+        for ev in secao["eventos"]:
+            evento_id += 1
+            refs = []
+            for campo, livro in (("mt", 40), ("mc", 41), ("lc", 42),
+                                 ("jo", 43)):
+                if campo not in ev:
+                    continue
+                rs = _referencias(ev[campo], existe, "sinótico " + ev["t"])
+                if any(l != livro for l, _, _ in rs):
+                    sys.exit("sinótico %r: %s fora do evangelho %s" % (
+                        ev["t"], ev[campo], campo))
+                for ordem, (l, a, b) in enumerate(rs):
+                    refs.append((evento_id, l, ordem, a, b))
+            if not refs:
+                sys.exit("sinótico %r: sem passagem" % ev["t"])
+            leituras = _leituras_evento(con, refs)
+            ligados += bool(leituras)
+            con.execute("INSERT INTO sinotico_evento VALUES (?,?,?)",
+                        (evento_id, si, ev["t"]))
+            con.executemany(
+                "INSERT INTO sinotico_leitura VALUES (?,?,?,?,?)",
+                [(evento_id, i, o, c, p)
+                 for i, (o, c, p) in enumerate(leituras)])
+            con.executemany("INSERT INTO sinotico_ref VALUES (?,?,?,?,?)",
+                            refs)
+    con.execute("CREATE INDEX ix_sinotico_ref ON sinotico_ref (livro, ini)")
+    print("  guia sinótico: %d episódios em %d períodos; %d narrados em "
+          "capítulos de Ellen G. White" % (evento_id, len(dados), ligados))
+
+
+def _leituras_evento(con, refs):
+    """Capítulos que narram o episódio: os "Este capítulo é baseado em..."
+    de O Desejado de Todas as Nações, Parábolas de Jesus e História da
+    Redenção que se sobrepõem às passagens, do mais ao menos sobreposto.
+
+    Só a ligação declarada pela própria autora conta: contar citações
+    soltas ligava o prólogo de João ao capítulo "Tradição"."""
+    pontos = {}
+    for _, livro, _, ini, fim in refs:
+        for obra, cap, pagina, a, b in con.execute(
+                "SELECT t.obra, t.capitulo, t.pagina, r.ini, r.fim "
+                "FROM ref_obra r JOIN trecho t ON t.id = r.trecho "
+                "JOIN obra o ON o.id = t.obra "
+                "WHERE r.tipo=1 AND o.sigla IN ('DTN', 'PJ', 'HR') "
+                "AND r.livro=? AND r.ini<=? AND r.fim>=? "
+                "AND t.capitulo IS NOT NULL", (livro, fim, ini)):
+            sobre = max(min(fim, b) - max(ini, a) + 1, 1)
+            atual = pontos.get((obra, cap), (0, pagina))
+            pontos[(obra, cap)] = (atual[0] + sobre, min(atual[1], pagina))
+    ordem = {"DTN": 0, "PJ": 1, "HR": 2}
+    siglas = dict(con.execute("SELECT id, sigla FROM obra"))
+    escolhidos = sorted(pontos.items(),
+                        key=lambda x: (ordem[siglas[x[0][0]]], -x[1][0]))
+    # Um capítulo por obra.
+    vistos, saida = set(), []
+    for (obra, cap), (_, pagina) in escolhidos:
+        if obra not in vistos:
+            vistos.add(obra)
+            saida.append((obra, cap, pagina))
+    return saida
+
+
 def notas(con):
     if not os.path.exists(NOTAS):
         print("  notas: nenhuma (rode gerar_notas.py para criá-las)")
@@ -426,6 +519,7 @@ def main():
         copiar_mapas(con)
         existe = {(l, c * 1000 + v) for (l, c, v) in textos}
         temas(con, existe)
+        sinotico(con, existe)
         con.execute("INSERT INTO info VALUES ('esquema', '1')")
         con.commit()
         con.execute("VACUUM")

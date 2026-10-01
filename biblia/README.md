@@ -19,6 +19,10 @@ App para **Android e Windows** que junta, em cada versículo:
   Eliseu, impérios de Daniel, exílio, Palestina de Jesus, as três viagens de
   Paulo e a viagem a Roma, as sete igrejas) e 1.156 lugares bíblicos com nome
   em português; cada versículo mostra num minimapa os lugares que cita;
+- **guia sinótico dos evangelhos**: 173 episódios em ordem cronológica, com
+  a passagem de Mateus, Marcos, Lucas e João lado a lado, e o capítulo de
+  *O Desejado de Todas as Nações* ou de *Parábolas de Jesus* que narra cada
+  um; nos evangelhos, o painel de estudo mostra o episódio nos outros três;
 - **índice temático**: 50 temas em 6 categorias (Deus, criação, salvação,
   vida cristã, igreja, profecia), com versículos e os capítulos de Ellen G.
   White que mais os citam;
@@ -45,6 +49,7 @@ estudo aberta.
 | Lugares bíblicos com coordenadas | 1.156, citados em 8.368 versículos |
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
+| Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -117,6 +122,9 @@ este app, fácil de revisar e corrigir. Do mesmo jeito:
   lugares e rotas, pelos identificadores do OpenBible). Para um mapa novo,
   acrescente uma entrada e rode `construir_mapas.py` — ele recusa lugar
   desconhecido ou referência ilegível.
+- `ferramentas/sinotico.json`: a harmonia dos evangelhos, por período. O
+  capítulo de Ellen G. White de cada episódio é achado pelo "Este capítulo é
+  baseado em..." do próprio livro — só a ligação declarada por ela conta.
 - `ferramentas/temas.json`: temas e estudos bíblicos. Toda referência é
   conferida contra o texto da ARA no `construir_estudo.py`. As leituras de
   Ellen G. White de cada tema são calculadas: os capítulos que citam mais

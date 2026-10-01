@@ -15,6 +15,7 @@ import 'mapas.dart';
 import 'marcacoes.dart';
 import 'navegacao.dart';
 import 'seletor.dart';
+import 'sinotico.dart';
 import 'temas.dart';
 
 /// Tela principal: o leitor e, ao tocar num versículo, o painel de estudo.
@@ -222,6 +223,9 @@ class _TelaInicioState extends State<TelaInicio> {
             onSelected: (op) => switch (op) {
               'biblioteca' => _abrir(const TelaBiblioteca()),
               'mapas' when versao != null => _abrir(TelaMapas(versao: versao)),
+              'sinotico' when versao != null => _abrir(
+                TelaSinotico(versao: versao),
+              ),
               'temas' when versao != null => _abrir(TelaTemas(versao: versao)),
               'estudos' when versao != null => _abrir(
                 TelaTemas(versao: versao, abaInicial: 1),
@@ -243,6 +247,13 @@ class _TelaInicioState extends State<TelaInicio> {
                 child: ListTile(
                   leading: Icon(Icons.quiz_outlined),
                   title: Text('Estudos bíblicos'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'sinotico',
+                child: ListTile(
+                  leading: Icon(Icons.view_column_outlined),
+                  title: Text('Guia sinótico'),
                 ),
               ),
               PopupMenuItem(
