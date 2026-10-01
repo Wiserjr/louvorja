@@ -78,7 +78,21 @@ class Estudo {
       if (o != 0) return o;
       return a.pagina.compareTo(b.pagina);
     });
-    return lista;
+    // Recortes que se sobrepõem no PDF são o mesmo texto: o título de uma
+    // meditação ("O pão nosso... Mateus 6:11") é estendido até a meditação,
+    // que pode citar o versículo de novo.
+    bool sobrepoe(Trecho a, Trecho b) =>
+        a.obra.id == b.obra.id &&
+        a.segmentos.any(
+          (x) => b.segmentos.any(
+            (y) => x.$1 == y.$1 && x.$2 < y.$3 && y.$2 < x.$3,
+          ),
+        );
+    final unicos = <Trecho>[];
+    for (final t in lista) {
+      if (!unicos.any((u) => sobrepoe(u, t))) unicos.add(t);
+    }
+    return unicos;
   }
 
   /// Quantos trechos de Ellen G. White e dos pioneiros citam cada versículo

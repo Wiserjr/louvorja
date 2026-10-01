@@ -241,16 +241,26 @@ class _CartaoTrechoState extends State<CartaoTrecho> {
 }
 
 /// Abre o PDF na página do trecho (baixando antes, se preciso).
-Future<void> abrirNoLivro(BuildContext context, Trecho tr) async {
+Future<void> abrirNoLivro(BuildContext context, Trecho tr) =>
+    abrirObra(context, tr.obra, tr.pagina, destaque: tr.ancora);
+
+/// Abre um livro numa página, oferecendo baixá-lo se ainda não estiver no
+/// aparelho.
+Future<void> abrirObra(
+  BuildContext context,
+  Obra obra,
+  int pagina, {
+  String? destaque,
+}) async {
   final bib = Biblioteca.instancia;
-  if (!bib.disponivel(tr.obra)) {
+  if (!bib.disponivel(obra)) {
     final baixar = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text(tr.obra.titulo),
+        title: Text(obra.titulo),
         content: Text(
           'Este livro ainda não está no aparelho. Baixar agora do site do '
-          'Centro White (${tamanhoLegivel(tr.obra.bytes)})?',
+          'Centro White (${tamanhoLegivel(obra.bytes)})?',
         ),
         actions: [
           TextButton(
@@ -266,7 +276,7 @@ Future<void> abrirNoLivro(BuildContext context, Trecho tr) async {
     );
     if (baixar != true || !context.mounted) return;
     try {
-      await bib.baixar(tr.obra);
+      await bib.baixar(obra);
     } on FalhaDownload catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -281,8 +291,7 @@ Future<void> abrirNoLivro(BuildContext context, Trecho tr) async {
   await Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) =>
-          TelaPdf(obra: tr.obra, pagina: tr.pagina, destaque: tr.ancora),
+      builder: (_) => TelaPdf(obra: obra, pagina: pagina, destaque: destaque),
     ),
   );
 }

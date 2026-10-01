@@ -138,8 +138,11 @@ class _TelaAjustesState extends State<TelaAjustes> {
                 'Adventist Pioneer Library, baixados no aparelho para uso '
                 'pessoal. O app guarda só o índice que liga cada versículo ao '
                 'parágrafo.\n'
-                '• Referências cruzadas: OpenBible.info (CC BY).\n'
-                '• Introduções aos livros: escritas para este app.',
+                '• Referências cruzadas e localização dos lugares bíblicos: '
+                'OpenBible.info (CC BY 4.0). Contornos dos mapas: Natural '
+                'Earth (domínio público).\n'
+                '• Introduções, mapas temáticos, índice temático e estudos '
+                'bíblicos: escritos para este app.',
               ),
             ),
           ],

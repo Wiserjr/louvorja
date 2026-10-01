@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import '../dados/ajustes.dart';
 import '../dados/biblia.dart';
 import '../dados/estudo.dart';
+import '../dados/mapas.dart';
 import '../dados/modelos.dart';
 import '../dados/referencias.dart';
+import '../dados/temas.dart';
 import 'acoes_versiculo.dart';
 import 'biblioteca.dart';
 import 'cartao_trecho.dart';
+import 'mapa_vista.dart';
+import 'mapas.dart';
 import 'tema.dart';
+import 'temas.dart';
 import 'texto_biblico.dart';
 
 /// Tudo sobre um versículo, como nas margens de uma Bíblia de estudo:
@@ -40,11 +45,15 @@ class _Dados {
     required this.trechos,
     required this.referencias,
     required this.notas,
+    required this.lugares,
+    required this.temas,
   });
   final String texto;
   final List<Trecho> trechos;
   final List<RefCruzada> referencias;
   final List<Nota> notas;
+  final List<Lugar> lugares;
+  final List<Tema> temas;
 }
 
 class _PainelEstudoState extends State<PainelEstudo> {
@@ -66,6 +75,8 @@ class _PainelEstudoState extends State<PainelEstudo> {
       e.trechos(_livro, _cap, _ver),
       e.referencias(_livro, _cap, _ver),
       e.notas(_livro, _cap, _ver),
+      Mapas.instancia.doVersiculo(_livro, _cap, _ver),
+      Temas.instancia.doVersiculo(_livro, _cap, _ver),
     ]);
     final linhas = r[0] as List<(int, int, String)>;
     return _Dados(
@@ -73,6 +84,8 @@ class _PainelEstudoState extends State<PainelEstudo> {
       trechos: r[1] as List<Trecho>,
       referencias: r[2] as List<RefCruzada>,
       notas: r[3] as List<Nota>,
+      lugares: r[4] as List<Lugar>,
+      temas: r[5] as List<Tema>,
     );
   }
 
@@ -231,6 +244,34 @@ class _PainelEstudoState extends State<PainelEstudo> {
                 refs: especiais,
                 versao: widget.versao,
                 aoIr: widget.aoIr,
+              ),
+            ],
+          ),
+        if (d.lugares.isNotEmpty)
+          _Secao(
+            titulo: 'Lugares',
+            contagem: d.lugares.length,
+            icone: Icons.place_outlined,
+            inicialmenteAberta: true,
+            filhos: [_MiniMapa(lugares: d.lugares, versao: widget.versao)],
+          ),
+        if (d.temas.isNotEmpty)
+          _Secao(
+            titulo: 'Temas',
+            contagem: d.temas.length,
+            icone: Icons.topic_outlined,
+            inicialmenteAberta: true,
+            filhos: [
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  for (final x in d.temas)
+                    ActionChip(
+                      label: Text(x.titulo),
+                      onPressed: () => abrirTema(context, x, widget.versao),
+                    ),
+                ],
               ),
             ],
           ),
@@ -564,6 +605,66 @@ class _CompararState extends State<_Comparar> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Os lugares do versículo num mapa pequeno, com os nomes para tocar.
+class _MiniMapa extends StatefulWidget {
+  const _MiniMapa({required this.lugares, required this.versao});
+  final List<Lugar> lugares;
+  final Versao versao;
+
+  @override
+  State<_MiniMapa> createState() => _MiniMapaState();
+}
+
+class _MiniMapaState extends State<_MiniMapa> {
+  late final Future<Geometria> _geo = Mapas.instancia.geometria();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            height: 170,
+            child: FutureBuilder<Geometria>(
+              future: _geo,
+              builder: (context, snap) => snap.data == null
+                  ? const SizedBox.shrink()
+                  : VistaMapa(
+                      geometria: snap.data!,
+                      lugares: widget.lugares,
+                      destaque: {for (final l in widget.lugares) l.id},
+                      interativo: false,
+                      margem: 0.3,
+                      vizinhanca: 0.8,
+                      aoTocarLugar: (l) =>
+                          abrirLugar(context, l, widget.versao),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            for (final l in widget.lugares)
+              ActionChip(
+                avatar: Icon(
+                  l.incerto ? Icons.radio_button_unchecked : Icons.place,
+                  size: 16,
+                ),
+                label: Text(l.nome),
+                onPressed: () => abrirLugar(context, l, widget.versao),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

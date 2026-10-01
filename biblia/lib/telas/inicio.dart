@@ -11,8 +11,11 @@ import 'busca.dart';
 import 'estudo.dart';
 import 'introducao.dart';
 import 'leitor.dart';
+import 'mapas.dart';
 import 'marcacoes.dart';
+import 'navegacao.dart';
 import 'seletor.dart';
+import 'temas.dart';
 
 /// Tela principal: o leitor e, ao tocar num versículo, o painel de estudo.
 ///
@@ -40,10 +43,25 @@ class _TelaInicioState extends State<TelaInicio> {
   void initState() {
     super.initState();
     _carregarVersoes();
+    destinoLeitura.addListener(_destinoPedido);
     // Checagem silenciosa: só aparece algo se houver versão nova.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) FluxoAtualizacao.verificar(context);
     });
+  }
+
+  @override
+  void dispose() {
+    destinoLeitura.removeListener(_destinoPedido);
+    super.dispose();
+  }
+
+  /// Versículo pedido por um mapa, tema ou estudo (ver navegacao.dart).
+  void _destinoPedido() {
+    final p = destinoLeitura.value;
+    if (p == null) return;
+    destinoLeitura.value = null;
+    _ir(p, abrirEstudo: p.versiculo != null);
   }
 
   Future<void> _carregarVersoes() async {
@@ -203,11 +221,37 @@ class _TelaInicioState extends State<TelaInicio> {
           PopupMenuButton<String>(
             onSelected: (op) => switch (op) {
               'biblioteca' => _abrir(const TelaBiblioteca()),
+              'mapas' when versao != null => _abrir(TelaMapas(versao: versao)),
+              'temas' when versao != null => _abrir(TelaTemas(versao: versao)),
+              'estudos' when versao != null => _abrir(
+                TelaTemas(versao: versao, abaInicial: 1),
+              ),
               'marcacoes' => _abrir(const TelaMarcacoes()),
               'ajustes' => _abrir(const TelaAjustes()),
               _ => null,
             },
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'temas',
+                child: ListTile(
+                  leading: Icon(Icons.topic_outlined),
+                  title: Text('Índice temático'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'estudos',
+                child: ListTile(
+                  leading: Icon(Icons.quiz_outlined),
+                  title: Text('Estudos bíblicos'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'mapas',
+                child: ListTile(
+                  leading: Icon(Icons.map_outlined),
+                  title: Text('Mapas'),
+                ),
+              ),
               PopupMenuItem(
                 value: 'biblioteca',
                 child: ListTile(

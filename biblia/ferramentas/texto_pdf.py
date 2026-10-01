@@ -200,6 +200,9 @@ _INICIO_FORCADO = re.compile(
     r"VERS[ÍI]CULOS?\s+\d)")
 
 
+_TITULO = re.compile(r"^\s*(Capítulo|CAPÍTULO)\s+\d+\s*[—–-]")
+
+
 def paragrafos(caminho):
     """Divide o livro em parágrafos, atravessando páginas.
 
@@ -222,6 +225,16 @@ def paragrafos(caminho):
         for ln in corpo:
             novo = (atual is None or ln.x - margem > 8 or
                     _INICIO_FORCADO.match(ln.texto) is not None)
+            if novo and atual is not None and \
+                    _TITULO.match(atual.primeira_linha) and \
+                    len(atual.segmentos) == 1 and \
+                    atual.ultima is atual.primeira_linha and \
+                    _INICIO_FORCADO.match(ln.texto) is None and \
+                    ln.x - margem > 35 and len(ln.texto.strip()) < 60:
+                # Título de capítulo que quebrou em duas linhas centralizadas:
+                # "Capítulo 23 — O santuário celestial, centro de nossa" /
+                # "esperança".
+                novo = False
             if novo and atual is not None and \
                     atual.primeira_linha.startswith("Este capítulo é baseado") \
                     and not atual.ultima.rstrip().endswith("."):

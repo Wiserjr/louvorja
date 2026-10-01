@@ -24,6 +24,10 @@ anotações.
   passagem (Patriarcas e Profetas, O Desejado de Todas as Nações...).
 - Daniel e Apocalipse comentados versículo a versículo por Urias Smith.
 - Introdução a cada um dos 66 livros.
+- 18 mapas (Abraão, Êxodo, reinos de Israel e Judá, viagens de Paulo, sete
+  igrejas...) e os lugares de cada versículo num minimapa.
+- Índice temático com 50 temas e 16 estudos bíblicos em perguntas e
+  respostas, com as leituras de Ellen G. White de cada tema.
 - Marcações com cores, anotações e busca.
 
 Os livros de Ellen G. White são baixados do site do Centro de Pesquisas Ellen

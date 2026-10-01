@@ -30,6 +30,14 @@ Junta num banco só:
     nota
         notas de estudo por versículo, se ferramentas/cache/notas.jsonl existir
         (ver gerar_notas.py)
+
+    lugar, lugar_ref, mapa, geometria
+        lugares bíblicos e mapas temáticos (ver construir_mapas.py)
+
+    tema, tema_ref, tema_egw, estudo, estudo_pergunta
+        índice temático e estudos bíblicos (ferramentas/temas.json). As
+        leituras de Ellen G. White de cada tema não são escritas à mão: são os
+        capítulos que mais citam os versículos do tema, achados pelo índice.
 """
 import gzip
 import json
@@ -53,6 +61,8 @@ NOTAS = os.path.join(CACHE, "notas.jsonl")
 BIBLIA = os.path.join(RAIZ, "assets", "biblia.db.gz")
 DESTINO = os.path.join(RAIZ, "assets", "estudo.db.gz")
 INTRODUCOES = os.path.join(PASTA, "introducoes.json")
+MAPAS = os.path.join(CACHE, "mapas.db")
+TEMAS = os.path.join(PASTA, "temas.json")
 
 URL_REFERENCIAS = "https://a.openbible.info/data/cross-references.zip"
 VOTOS_MINIMOS = 3
@@ -271,6 +281,114 @@ def introducoes(con):
     print("  introduções: %d livros" % len(dados))
 
 
+def copiar_mapas(con):
+    if not os.path.exists(MAPAS):
+        sys.exit("Falta %s — rode construir_mapas.py antes." % MAPAS)
+    con.execute("ATTACH DATABASE ? AS m", (MAPAS,))
+    for tabela in ("lugar", "lugar_ref", "mapa", "geometria"):
+        sql = con.execute("SELECT sql FROM m.sqlite_master WHERE name=?",
+                          (tabela,)).fetchone()[0]
+        con.execute(sql)
+        con.execute("INSERT INTO main.%s SELECT * FROM m.%s" % (tabela,
+                                                               tabela))
+    con.commit()
+    con.execute("DETACH DATABASE m")
+    con.execute("CREATE INDEX ix_lugar_ref ON lugar_ref (livro, chave)")
+    con.execute("CREATE INDEX ix_lugar_ref_lugar ON lugar_ref (lugar)")
+    print("  mapas: %d lugares, %d mapas temáticos" % (
+        con.execute("SELECT count(*) FROM lugar").fetchone()[0],
+        con.execute("SELECT count(*) FROM mapa").fetchone()[0]))
+
+
+def _referencias(texto, existe, onde):
+    """'Salmos 33:6, 9' -> [(19, 33006, 33006), (19, 33009, 33009)],
+    conferindo que os versículos existem."""
+    from referencias_pt import encontrar
+    refs = [r.tupla() for r in encontrar(texto)]
+    if not refs:
+        sys.exit("%s: referência ilegível %r" % (onde, texto))
+    for livro, ini, fim in refs:
+        for k in (ini, fim):
+            if k % 1000 not in (0, 999) and (livro, k) not in existe:
+                sys.exit("%s: %r não existe na ARA" % (onde, texto))
+    return refs
+
+
+def temas(con, existe):
+    with open(TEMAS, encoding="utf-8") as f:
+        dados = json.load(f)
+    con.executescript("""
+    CREATE TABLE tema (
+      id TEXT PRIMARY KEY, ordem INTEGER NOT NULL, categoria TEXT NOT NULL,
+      titulo TEXT NOT NULL, resumo TEXT
+    );
+    CREATE TABLE tema_ref (
+      tema TEXT NOT NULL, ordem INTEGER NOT NULL, livro INTEGER NOT NULL,
+      ini INTEGER NOT NULL, fim INTEGER NOT NULL
+    );
+    CREATE TABLE tema_egw (
+      tema TEXT NOT NULL, ordem INTEGER NOT NULL, obra INTEGER NOT NULL,
+      capitulo INTEGER NOT NULL, pagina INTEGER NOT NULL,
+      versiculos INTEGER NOT NULL
+    );
+    CREATE TABLE estudo (
+      id TEXT PRIMARY KEY, ordem INTEGER NOT NULL, titulo TEXT NOT NULL,
+      introducao TEXT
+    );
+    CREATE TABLE estudo_pergunta (
+      estudo TEXT NOT NULL, ordem INTEGER NOT NULL, pergunta TEXT NOT NULL,
+      livro INTEGER NOT NULL, ini INTEGER NOT NULL, fim INTEGER NOT NULL
+    );
+    """)
+    n_refs = 0
+    for ordem, t in enumerate(dados["temas"]):
+        con.execute("INSERT INTO tema VALUES (?,?,?,?,?)",
+                    (t["id"], ordem, t["categoria"], t["titulo"],
+                     t.get("resumo")))
+        refs = []
+        for texto in t["versiculos"]:
+            refs += _referencias(texto, existe, "tema " + t["id"])
+        con.executemany("INSERT INTO tema_ref VALUES (?,?,?,?,?)",
+                        [(t["id"], i, l, a, b)
+                         for i, (l, a, b) in enumerate(refs)])
+        n_refs += len(refs)
+        _leituras(con, t["id"], refs)
+    for ordem, e in enumerate(dados["estudos"]):
+        con.execute("INSERT INTO estudo VALUES (?,?,?,?)",
+                    (e["id"], ordem, e["titulo"], e.get("introducao")))
+        for i, q in enumerate(e["perguntas"]):
+            refs = _referencias(q["ref"], existe, "estudo " + e["id"])
+            l, a = refs[0][0], refs[0][1]
+            b = refs[-1][2] if refs[-1][0] == l else refs[0][2]
+            con.execute("INSERT INTO estudo_pergunta VALUES (?,?,?,?,?,?)",
+                        (e["id"], i, q["p"], l, a, b))
+    print("  temas: %d (%d referências); estudos bíblicos: %d" % (
+        len(dados["temas"]), n_refs, len(dados["estudos"])))
+
+
+def _leituras(con, tema, refs):
+    """Os capítulos de Ellen G. White que mais citam os versículos do tema."""
+    contagem = {}
+    for i, (livro, ini, fim) in enumerate(refs):
+        for obra, cap, pagina in con.execute(
+                "SELECT t.obra, t.capitulo, c.pagina FROM ref_obra r "
+                "JOIN trecho t ON t.id = r.trecho "
+                "JOIN capitulo c ON c.id = t.capitulo "
+                "JOIN obra o ON o.id = t.obra "
+                "WHERE r.livro = ? AND r.ini <= ? AND r.fim >= ? "
+                "AND r.fim - r.ini < 900 AND o.grupo = 'egw' "
+                "AND o.prioridade < 6",
+                (livro, fim, ini)):
+            chave = (obra, cap, pagina)
+            contagem.setdefault(chave, set()).add(i)
+    melhores = sorted(contagem.items(),
+                      key=lambda x: (-len(x[1]), x[0][0], x[0][2]))
+    escolhidos = [(k, len(v)) for k, v in melhores if len(v) >= 2][:6]
+    con.executemany("INSERT INTO tema_egw VALUES (?,?,?,?,?,?)",
+                    [(tema, i, o, c, p, n)
+                     for i, ((o, c, p), n) in enumerate(escolhidos)])
+
+
 def notas(con):
     if not os.path.exists(NOTAS):
         print("  notas: nenhuma (rode gerar_notas.py para criá-las)")
@@ -305,6 +423,9 @@ def main():
         referencias_cruzadas(con, textos, crus)
         introducoes(con)
         notas(con)
+        copiar_mapas(con)
+        existe = {(l, c * 1000 + v) for (l, c, v) in textos}
+        temas(con, existe)
         con.execute("INSERT INTO info VALUES ('esquema', '1')")
         con.commit()
         con.execute("VACUUM")

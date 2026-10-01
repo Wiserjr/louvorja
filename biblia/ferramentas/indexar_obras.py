@@ -207,7 +207,8 @@ def indexar_obra(con, id_obra, arquivo, comentario_versiculo):
         if not texto:
             continue
         m = _CAPITULO.match(texto)
-        if m and ". . ." not in texto and len(texto) < 120:
+        if m and ". . ." not in texto and len(texto) < 120 and \
+                not re.search(r"\d\s*$", texto):
             # Título de capítulo (o sumário tem os mesmos, com pontilhado).
             con.execute(
                 "INSERT INTO capitulo (obra, titulo, pagina) VALUES (?,?,?)",

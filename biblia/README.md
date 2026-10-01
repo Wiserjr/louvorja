@@ -15,6 +15,15 @@ App para **Android e Windows** que junta, em cada versículo:
 - **introdução a cada livro**: autor, data, local, tema, versículo-chave,
   esboço, mensagem, Cristo no livro e onde Ellen G. White trata dele;
 - **notas de estudo** por versículo (opcionais; ver *Notas*, abaixo);
+- **mapas**: 18 mapas temáticos (Abraão, Êxodo, conquista, reinos, Elias e
+  Eliseu, impérios de Daniel, exílio, Palestina de Jesus, as três viagens de
+  Paulo e a viagem a Roma, as sete igrejas) e 1.156 lugares bíblicos com nome
+  em português; cada versículo mostra num minimapa os lugares que cita;
+- **índice temático**: 50 temas em 6 categorias (Deus, criação, salvação,
+  vida cristã, igreja, profecia), com versículos e os capítulos de Ellen G.
+  White que mais os citam;
+- **estudos bíblicos**: 16 estudos em perguntas e respostas, com a resposta
+  escondida até tocar;
 - marcações com cores, anotações, busca por referência ou por palavras;
 - **atualização automática** no Android e no Windows.
 
@@ -33,6 +42,9 @@ estudo aberta.
 | Referências cruzadas (OpenBible.info, ≥ 3 votos) | 213.579 |
 | Citações AT ↔ NT detectadas | 368 (+ 284 alusões) |
 | Passagens paralelas | 799 |
+| Lugares bíblicos com coordenadas | 1.156, citados em 8.368 versículos |
+| Mapas temáticos | 18 |
+| Temas / estudos bíblicos | 50 / 16 |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -88,6 +100,8 @@ pip install pypdfium2           # e anthropic, para as notas
 cd biblia
 python ferramentas/construir_biblia.py   # texto, a partir do catálogo do Louvor JA
 python ferramentas/indexar_obras.py      # baixa os 106 PDFs (~155 MB) e indexa
+pip install shapely pyshp
+python ferramentas/construir_mapas.py    # lugares (OpenBible) e contornos (Natural Earth)
 python ferramentas/construir_estudo.py   # junta tudo em assets/estudo.db.gz
 ```
 
@@ -97,7 +111,20 @@ Para acrescentar um livro: inclua-o em `ferramentas/obras.py` (arquivo, sigla,
 prioridade) e rode os dois últimos comandos.
 
 As introduções estão em `ferramentas/introducoes.json` — texto escrito para
-este app, fácil de revisar e corrigir.
+este app, fácil de revisar e corrigir. Do mesmo jeito:
+
+- `ferramentas/mapas.json`: os mapas temáticos (título, período, descrição,
+  lugares e rotas, pelos identificadores do OpenBible). Para um mapa novo,
+  acrescente uma entrada e rode `construir_mapas.py` — ele recusa lugar
+  desconhecido ou referência ilegível.
+- `ferramentas/temas.json`: temas e estudos bíblicos. Toda referência é
+  conferida contra o texto da ARA no `construir_estudo.py`. As leituras de
+  Ellen G. White de cada tema são calculadas: os capítulos que citam mais
+  versículos do tema.
+
+O nome em português de cada lugar é descoberto no próprio texto da ARA (a
+palavra que mais se repete nos versículos do lugar e mais se parece com o nome
+em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo (opcional)
 

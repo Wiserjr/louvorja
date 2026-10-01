@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:biblia_estudo/dados/banco.dart';
 import 'package:biblia_estudo/dados/estudo.dart';
+import 'package:biblia_estudo/dados/mapas.dart';
+import 'package:biblia_estudo/dados/temas.dart';
 import 'package:biblia_estudo/dados/modelos.dart';
 import 'package:biblia_estudo/dados/trechos.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +69,70 @@ void main() {
     expect(refs.any((r) => r.livro == 5 && r.ini == 8003 && r.citacao), isTrue);
     final volta = await Estudo.instancia.referencias(5, 8, 3);
     expect(volta.any((r) => r.livro == 40 && r.ini == 4004), isTrue);
+  });
+
+  group('mapas', () {
+    test('lugares de um versículo, com nome em português', () async {
+      // Mateus 2:1 — "Belém da Judéia", "Jerusalém".
+      final l = await Mapas.instancia.doVersiculo(40, 2, 1);
+      final nomes = l.map((x) => x.nome).toSet();
+      expect(nomes, containsAll(['Belém', 'Jerusalém']));
+    });
+
+    test(
+      'mapas temáticos: rotas com lugares e coordenadas plausíveis',
+      () async {
+        final mapas = await Mapas.instancia.tematicos();
+        expect(mapas.length, greaterThanOrEqualTo(15));
+        final paulo = mapas.firstWhere((m) => m.id == 'paulo-2');
+        final rota = await Mapas.instancia.lugares(paulo.rotas.first.lugares);
+        expect(rota.first.nome, contains('Antioquia'));
+        expect(rota.map((l) => l.nome), contains('Corinto'));
+        for (final l in rota) {
+          expect(l.lon, inInclusiveRange(8, 60), reason: l.nome);
+          expect(l.lat, inInclusiveRange(20, 46), reason: l.nome);
+        }
+      },
+    );
+
+    test('a geometria tem terra, lagos e rios', () async {
+      final g = await Mapas.instancia.geometria();
+      expect(g.terra, isNotEmpty);
+      expect(g.lagos, isNotEmpty);
+      expect(g.rios, isNotEmpty);
+    });
+  });
+
+  group('temas e estudos', () {
+    test('o sábado tem versículos e leituras de Ellen G. White', () async {
+      final passagens = await Temas.instancia.passagens('sabado');
+      expect(passagens.first.livro, 1); // Gênesis 2:2-3
+      final leituras = await Temas.instancia.leituras('sabado');
+      expect(leituras, isNotEmpty);
+      expect(leituras.first.versiculos, greaterThanOrEqualTo(2));
+    });
+
+    test('João 3:16 aparece em temas', () async {
+      final t = await Temas.instancia.doVersiculo(43, 3, 16);
+      expect(t.map((x) => x.id), contains('amor-de-deus'));
+    });
+
+    test('estudos bíblicos em ordem, com perguntas', () async {
+      final e = await Temas.instancia.estudos();
+      expect(e.first.titulo, startsWith('1.'));
+      final q = await Temas.instancia.perguntas(e.first.id);
+      expect(q, isNotEmpty);
+    });
+
+    test('título curto de capítulo', () {
+      expect(tituloCurto('Capítulo 29 — O Sábado'), 'cap. 29 — O Sábado');
+      expect(
+        tituloCurto(
+          'Capítulo 17 — Poesias e cânticos “Os Teus estatutos têm sido',
+        ),
+        'cap. 17 — Poesias e cânticos',
+      );
+    });
   });
 
   test('todos os livros têm introdução', () async {
