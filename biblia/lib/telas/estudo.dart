@@ -208,8 +208,8 @@ class _PainelEstudoState extends State<PainelEstudo> {
                   ),
                 ),
               Text(
-                'Nota gerada com inteligência artificial a partir do texto '
-                'bíblico e dos trechos indexados. Confira sempre com a Bíblia.',
+                'Nota escrita com inteligência artificial para este app. '
+                'Confira sempre com a Bíblia.',
                 style: t.textTheme.labelSmall?.copyWith(color: t.hintColor),
               ),
             ],

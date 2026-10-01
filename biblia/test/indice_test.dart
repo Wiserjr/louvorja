@@ -136,6 +136,25 @@ void main() {
     });
   });
 
+  group('notas de estudo', () {
+    test('os quatro evangelhos têm notas em todos os capítulos', () async {
+      for (final (livro, caps) in [(40, 28), (41, 16), (42, 24), (43, 21)]) {
+        for (var c = 1; c <= caps; c++) {
+          final rows = await Banco.instancia.estudo.rawQuery(
+            'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
+            [livro, c * 1000, c * 1000 + 999],
+          );
+          expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
+        }
+      }
+    });
+
+    test('João 3:16 tem nota', () async {
+      final n = await Estudo.instancia.notas(43, 3, 16);
+      expect(n.single.texto, contains('amor de Deus'));
+    });
+  });
+
   group('guia sinótico', () {
     test('episódios em ordem, do prólogo à ascensão', () async {
       final e = await Sinotico.instancia.eventos();

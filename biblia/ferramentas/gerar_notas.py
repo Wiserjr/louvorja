@@ -210,6 +210,19 @@ def _parametros(conteudo):
 
 def _feitos():
     feitos = set()
+    # Capítulos que já têm notas escritas em ferramentas/notas/ não são
+    # enviados (os evangelhos, por exemplo).
+    pasta = os.path.join(PASTA, "notas")
+    if os.path.isdir(pasta):
+        for nome in os.listdir(pasta):
+            m = re.match(r"^(\d+)-.*\.txt$", nome)
+            if not m:
+                continue
+            with open(os.path.join(pasta, nome), encoding="utf-8") as f:
+                for linha in f:
+                    mc = re.match(r"^#\s*(\d+)\s*$", linha)
+                    if mc:
+                        feitos.add((int(m.group(1)), int(mc.group(1))))
     if os.path.exists(NOTAS):
         with open(NOTAS, encoding="utf-8") as f:
             for linha in f:

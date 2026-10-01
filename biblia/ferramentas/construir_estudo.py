@@ -482,23 +482,114 @@ def _leituras_evento(con, refs):
     return saida
 
 
-def notas(con):
-    if not os.path.exists(NOTAS):
-        print("  notas: nenhuma (rode gerar_notas.py para criá-las)")
-        return
+NOTAS_ESCRITAS = os.path.join(PASTA, "notas")
+
+# "Ver O Desejado, cap. 12" / "O Desejado de Todas as Nações, cap. 29" /
+# "Parábolas de Jesus, cap. 16" — conferidos contra o índice.
+_OBRAS_CITADAS = {
+    "O Desejado de Todas as Nações": "DTN",
+    "O Desejado": "DTN",
+    "Parábolas de Jesus": "PJ",
+    "O Maior Discurso de Cristo": "MDC",
+    "Patriarcas e Profetas": "PP",
+    "Profetas e Reis": "PR",
+    "Atos dos Apóstolos": "AA",
+    "O Grande Conflito": "GC",
+}
+_CITACAO_CAP = re.compile(
+    r"(%s), cap\. (\d+)(?:, [\"“]?([^\"”.,;)]+)[\"”]?)?" % "|".join(
+        sorted(map(re.escape, _OBRAS_CITADAS), key=len, reverse=True)))
+
+
+def _ler_notas_escritas(existe):
+    """ferramentas/notas/NN-livro.txt: notas escritas para o app.
+
+        # 4
+        1-2 | texto da nota sobre os versículos 1 e 2
+    """
+    saida = []
+    if not os.path.isdir(NOTAS_ESCRITAS):
+        return saida
+    for nome in sorted(os.listdir(NOTAS_ESCRITAS)):
+        m = re.match(r"^(\d+)-.*\.txt$", nome)
+        if not m:
+            continue
+        livro = int(m.group(1))
+        cap = None
+        with open(os.path.join(NOTAS_ESCRITAS, nome), encoding="utf-8") as f:
+            for n, linha in enumerate(f, start=1):
+                linha = linha.strip()
+                onde = "%s:%d" % (nome, n)
+                if not linha or linha.startswith("# Notas") or \
+                        linha.startswith("# Formato"):
+                    continue
+                mc = re.match(r"^#\s*(\d+)$", linha)
+                if mc:
+                    cap = int(mc.group(1))
+                    continue
+                mv = re.match(r"^(\d+)(?:-(\d+))?\s*\|\s*(.+)$", linha)
+                if not mv or cap is None:
+                    sys.exit("%s: linha fora do formato" % onde)
+                a = int(mv.group(1))
+                b = int(mv.group(2) or a)
+                for v in (a, b):
+                    if (livro, cap * 1000 + v) not in existe:
+                        sys.exit("%s: %d:%d não existe" % (onde, cap, v))
+                if b < a:
+                    sys.exit("%s: intervalo invertido" % onde)
+                saida.append((livro, cap * 1000 + a, cap * 1000 + b,
+                              mv.group(3).strip(), onde))
+    return saida
+
+
+def _conferir_citacoes(con, texto, onde):
+    """Toda citação "obra, cap. N" precisa existir no índice."""
+    for m in _CITACAO_CAP.finditer(texto):
+        sigla = _OBRAS_CITADAS[m.group(1)]
+        num = int(m.group(2))
+        titulos = [t for (t,) in con.execute(
+            "SELECT c.titulo FROM capitulo c JOIN obra o ON o.id=c.obra "
+            "WHERE o.sigla=? AND c.titulo LIKE ?",
+            (sigla, "Capítulo %d —%%" % num))]
+        if not titulos:
+            sys.exit("%s: %s, cap. %d não existe" % (onde, sigla, num))
+        esperado = m.group(3)
+        if esperado:
+            alvo = _sem_acento_texto(esperado.strip(' "“”'))
+            if not any(alvo in _sem_acento_texto(t) for t in titulos):
+                sys.exit("%s: %s, cap. %d é %r, não %r" % (
+                    onde, sigla, num, titulos[0], esperado))
+
+
+def _sem_acento_texto(s):
+    return "".join(c for c in unicodedata.normalize("NFD", s.lower())
+                   if unicodedata.category(c) != "Mn")
+
+
+def notas(con, existe):
+    """Notas de estudo: as escritas para o app (ferramentas/notas/) e as
+    geradas pelo gerar_notas.py (cache/notas.jsonl), se houver."""
     n = 0
-    with open(NOTAS, encoding="utf-8") as f:
-        for linha in f:
-            if not linha.strip():
-                continue
-            d = json.loads(linha)
-            for nota in d.get("notas", []):
-                con.execute("INSERT INTO nota VALUES (?,?,?,?)",
-                            (d["livro"], nota["ini"], nota["fim"],
-                             nota["texto"]))
-                n += 1
+    for livro, ini, fim, texto, onde in _ler_notas_escritas(existe):
+        _conferir_citacoes(con, texto, onde)
+        con.execute("INSERT INTO nota VALUES (?,?,?,?)",
+                    (livro, ini, fim, texto))
+        n += 1
+    escritas = n
+    if os.path.exists(NOTAS):
+        with open(NOTAS, encoding="utf-8") as f:
+            for linha in f:
+                if not linha.strip():
+                    continue
+                d = json.loads(linha)
+                for nota in d.get("notas", []):
+                    con.execute("INSERT INTO nota VALUES (?,?,?,?)",
+                                (d["livro"], nota["ini"], nota["fim"],
+                                 nota["texto"]))
+                    n += 1
     con.execute("CREATE INDEX ix_nota ON nota (livro, ini)")
-    print("  notas: %d" % n)
+    print("  notas: %d (%d escritas para o app, %d geradas)" % (
+        n, escritas, n - escritas))
 
 
 def main():
@@ -515,9 +606,9 @@ def main():
         copiar_obras(con)
         referencias_cruzadas(con, textos, crus)
         introducoes(con)
-        notas(con)
-        copiar_mapas(con)
         existe = {(l, c * 1000 + v) for (l, c, v) in textos}
+        notas(con, existe)
+        copiar_mapas(con)
         temas(con, existe)
         sinotico(con, existe)
         con.execute("INSERT INTO info VALUES ('esquema', '1')")

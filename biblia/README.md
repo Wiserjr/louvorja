@@ -134,7 +134,21 @@ O nome em português de cada lugar é descoberto no próprio texto da ARA (a
 palavra que mais se repete nos versículos do lugar e mais se parece com o nome
 em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
-### Notas de estudo (opcional)
+### Notas de estudo
+
+Os quatro evangelhos já têm notas (579), escritas para o app em
+`ferramentas/notas/NN-livro.txt`, num formato simples de revisar:
+
+```
+# 4
+1-2 | O Espírito conduziu Jesus ao deserto...
+```
+
+O `construir_estudo.py` confere que cada versículo existe e que toda
+citação do tipo "O Desejado, cap. 12" ou "Parábolas de Jesus, cap. 2, "A
+sementeira da verdade"" aponta para um capítulo que existe no índice (e, com
+título, que o título bate). Para os demais livros, escreva no mesmo formato ou
+use o gerador abaixo, que pula os capítulos que já têm notas.
 
 `ferramentas/gerar_notas.py` escreve notas curtas por versículo com a API do
 Claude, no estilo das Bíblias de estudo: contexto histórico, sentido das
