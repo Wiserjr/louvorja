@@ -26,9 +26,11 @@ anotações.
 - Introdução a cada um dos 66 livros.
 - 18 mapas (Abraão, Êxodo, reinos de Israel e Judá, viagens de Paulo, sete
   igrejas...) e os lugares de cada versículo num minimapa.
-- Notas de estudo em todo o Novo Testamento (1.435 notas), com as ligações
-  aos capítulos de Ellen G. White; no Apocalipse, a leitura historicista das
-  sete igrejas, selos e trombetas, das três mensagens angélicas e do milênio.
+- Notas de estudo em todo o Novo Testamento e em Daniel (1.521 notas), com as
+  ligações aos capítulos de Ellen G. White; em Daniel e no Apocalipse, a
+  leitura historicista: os impérios, o chifre pequeno, as 70 semanas e os
+  2.300 dias, as sete igrejas, selos e trombetas, as três mensagens angélicas
+  e o milênio.
 - Guia sinótico: 173 episódios da vida de Jesus com os quatro evangelhos
   lado a lado e o capítulo de O Desejado de Todas as Nações de cada um.
 - Índice temático com 50 temas e 16 estudos bíblicos em perguntas e

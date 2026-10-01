@@ -190,6 +190,18 @@ void main() {
       final n = await Estudo.instancia.notas(66, 14, 7);
       expect(n.single.texto, contains('quarto mandamento'));
     });
+
+    test('Daniel tem notas em todos os capítulos; 8:14 leva a 1844', () async {
+      for (var c = 1; c <= 12; c++) {
+        final rows = await Banco.instancia.estudo.rawQuery(
+          'SELECT count(*) AS n FROM nota WHERE livro=27 AND ini BETWEEN ? AND ?',
+          [c * 1000, c * 1000 + 999],
+        );
+        expect(rows.first['n'], greaterThan(0), reason: 'Daniel $c');
+      }
+      final n = await Estudo.instancia.notas(27, 9, 25);
+      expect(n.single.texto, contains('457 a.C.'));
+    });
   });
 
   group('guia sinótico', () {
