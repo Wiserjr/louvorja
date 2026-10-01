@@ -50,7 +50,7 @@ estudo aberta.
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
 | Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
-| Notas de estudo | 1.315 (Mateus a Judas) |
+| Notas de estudo | 1.435 (todo o Novo Testamento) |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -137,9 +137,8 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-O Novo Testamento de Mateus a Judas já tem notas (1.315; falta o
-Apocalipse), escritas para o app em `ferramentas/notas/NN-livro.txt`, num
-formato simples de revisar:
+Todo o Novo Testamento já tem notas (1.435), escritas para o app em
+`ferramentas/notas/NN-livro.txt`, num formato simples de revisar:
 
 ```
 # 4
@@ -149,7 +148,7 @@ formato simples de revisar:
 O `construir_estudo.py` confere que cada versículo existe e que toda
 citação do tipo "O Desejado, cap. 12" ou "Parábolas de Jesus, cap. 2, "A
 sementeira da verdade"" aponta para um capítulo que existe no índice (e, com
-título, que o título bate). Para os demais livros, escreva no mesmo formato ou
+título, que o título bate). Para o Antigo Testamento, escreva no mesmo formato ou
 use o gerador abaixo, que pula os capítulos que já têm notas.
 
 `ferramentas/gerar_notas.py` escreve notas curtas por versículo com a API do

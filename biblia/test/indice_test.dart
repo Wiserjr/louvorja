@@ -137,7 +137,7 @@ void main() {
   });
 
   group('notas de estudo', () {
-    test('de Mateus a Judas, todos os capítulos têm notas', () async {
+    test('todo o Novo Testamento tem notas em todos os capítulos', () async {
       for (final (livro, caps) in [
         (40, 28),
         (41, 16),
@@ -184,6 +184,11 @@ void main() {
     test('Hebreus 8:2 fala do santuário celestial', () async {
       final n = await Estudo.instancia.notas(58, 8, 2);
       expect(n.single.texto, contains('santuário'));
+    });
+
+    test('Apocalipse 14:7 liga o primeiro anjo ao quarto mandamento', () async {
+      final n = await Estudo.instancia.notas(66, 14, 7);
+      expect(n.single.texto, contains('quarto mandamento'));
     });
   });
 
