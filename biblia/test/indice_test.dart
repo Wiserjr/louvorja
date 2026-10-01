@@ -137,27 +137,24 @@ void main() {
   });
 
   group('notas de estudo', () {
-    test(
-      'evangelhos, Atos e as cartas de Paulo têm notas em todos os capítulos',
-      () async {
-        for (final (livro, caps) in [
-          (40, 28),
-          (41, 16),
-          (42, 24),
-          (43, 21),
-          (44, 28),
-          (45, 16),
-        ]) {
-          for (var c = 1; c <= caps; c++) {
-            final rows = await Banco.instancia.estudo.rawQuery(
-              'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
-              [livro, c * 1000, c * 1000 + 999],
-            );
-            expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
-          }
+    test('de Mateus a Judas, todos os capítulos têm notas', () async {
+      for (final (livro, caps) in [
+        (40, 28),
+        (41, 16),
+        (42, 24),
+        (43, 21),
+        (44, 28),
+        (45, 16),
+      ]) {
+        for (var c = 1; c <= caps; c++) {
+          final rows = await Banco.instancia.estudo.rawQuery(
+            'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
+            [livro, c * 1000, c * 1000 + 999],
+          );
+          expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
         }
-      },
-    );
+      }
+    });
 
     test('João 3:16 tem nota', () async {
       final n = await Estudo.instancia.notas(43, 3, 16);
@@ -182,6 +179,11 @@ void main() {
     test('1 Tessalonicenses 4:13 trata a morte como sono', () async {
       final n = await Estudo.instancia.notas(52, 4, 13);
       expect(n.single.texto, contains('sono'));
+    });
+
+    test('Hebreus 8:2 fala do santuário celestial', () async {
+      final n = await Estudo.instancia.notas(58, 8, 2);
+      expect(n.single.texto, contains('santuário'));
     });
   });
 
