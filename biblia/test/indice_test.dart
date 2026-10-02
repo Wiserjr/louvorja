@@ -203,13 +203,16 @@ void main() {
       expect(n.single.texto, contains('457 a.C.'));
     });
 
-    test('o Pentateuco tem notas em todos os capítulos', () async {
+    test('de Gênesis a Rute, todos os capítulos têm notas', () async {
       for (final (livro, caps) in [
         (1, 50),
         (2, 40),
         (3, 27),
         (4, 36),
         (5, 34),
+        (6, 24),
+        (7, 21),
+        (8, 4),
       ]) {
         for (var c = 1; c <= caps; c++) {
           final rows = await Banco.instancia.estudo.rawQuery(
