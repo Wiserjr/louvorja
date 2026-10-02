@@ -1,0 +1,195 @@
+[
+  {
+    "id": "origens",
+    "titulo": "O mundo das origens",
+    "periodo": "Gênesis 1–11",
+    "descricao": "Depois do dilúvio, a arca repousou nas montanhas de Ararate, e as nações se espalharam a partir da planície de Sinear, onde construíram a torre de Babel. Gênesis 10 descreve os povos descendentes de Sem, Cam e Jafé ocupando o Oriente Próximo.",
+    "referencias": ["Gênesis 8:4", "Gênesis 10:1-32", "Gênesis 11:1-9"],
+    "lugares": ["Ararat", "Babel", "Nineveh", "Ur 1", "Haran", "Assyria", "Euphrates", "Tigris", "Canaan", "Egypt"],
+    "rotas": []
+  },
+  {
+    "id": "abraao",
+    "titulo": "As viagens de Abraão",
+    "periodo": "c. 2100–1900 a.C. · Gênesis 11–25",
+    "descricao": "Chamado por Deus, Abraão deixou Ur dos caldeus, passou por Harã e entrou em Canaã. Peregrinou entre Siquém, Betel, o Neguebe e o Egito, e viveu em Hebrom e Berseba. No monte Moriá, Deus proveu o cordeiro em lugar de Isaque.",
+    "referencias": ["Gênesis 11:31", "Gênesis 12:1-10", "Gênesis 13:18", "Gênesis 22:2", "Hebreus 11:8-10"],
+    "lugares": ["Ur 1", "Haran", "Shechem", "Bethel 1", "Egypt", "Hebron", "Beersheba 1", "Moriah", "Sodom", "Damascus"],
+    "rotas": [
+      {"nome": "Chamado e peregrinação", "lugares": ["Ur 1", "Haran", "Shechem", "Bethel 1", "Egypt", "Bethel 1", "Hebron", "Beersheba 1"]}
+    ]
+  },
+  {
+    "id": "patriarcas",
+    "titulo": "Jacó e José",
+    "periodo": "c. 1900–1800 a.C. · Gênesis 25–50",
+    "descricao": "Jacó fugiu de Berseba para Harã, onde serviu a Labão, e voltou a Canaã passando por Maanaim e Peniel. Seu filho José foi vendido em Dotã e levado ao Egito; mais tarde a família se estabeleceu em Gósen.",
+    "referencias": ["Gênesis 28:10-22", "Gênesis 32:22-32", "Gênesis 37:17-28", "Gênesis 46:28-34"],
+    "lugares": ["Beersheba 1", "Bethel 1", "Haran", "Mahanaim", "Shechem", "Hebron", "Dothan", "Goshen 1", "Egypt"],
+    "rotas": [
+      {"nome": "Fuga e volta de Jacó", "lugares": ["Beersheba 1", "Bethel 1", "Haran", "Mahanaim", "Shechem", "Bethel 1", "Hebron"]},
+      {"nome": "José levado ao Egito", "lugares": ["Hebron", "Shechem", "Dothan", "Goshen 1"]}
+    ]
+  },
+  {
+    "id": "exodo",
+    "titulo": "O Êxodo e a peregrinação no deserto",
+    "periodo": "c. 1446–1406 a.C. · Êxodo – Deuteronômio",
+    "descricao": "Rota tradicional: de Ramessés a Sucote, travessia do mar Vermelho, Mara, Elim, Refidim e o monte Sinai, onde Deus deu a lei e o plano do santuário. De Cades-Barneia os espias foram a Canaã; depois de quarenta anos o povo contornou Edom e chegou às planícies de Moabe, diante de Jericó. A localização exata de vários pontos é discutida.",
+    "referencias": ["Êxodo 12:37", "Êxodo 14:21-22", "Êxodo 15:23-27", "Êxodo 17:1", "Êxodo 19:1-2", "Números 13:26", "Números 20:22-29", "Deuteronômio 34:1-5"],
+    "lugares": ["Rameses", "Succoth 2", "Red Sea 1", "Marah", "Elim", "Rephidim", "Mount Sinai", "Kadesh-barnea", "Mount Hor 1", "Edom", "Moab 1", "Mount Nebo", "Jericho 1", "Ezion-geber"],
+    "rotas": [
+      {"nome": "Do Egito ao Sinai", "lugares": ["Rameses", "Succoth 2", "Red Sea 1", "Marah", "Elim", "Rephidim", "Mount Sinai"]},
+      {"nome": "Do Sinai a Moabe", "lugares": ["Mount Sinai", "Ezion-geber", "Kadesh-barnea", "Mount Hor 1", "Moab 1", "Mount Nebo"]}
+    ]
+  },
+  {
+    "id": "conquista",
+    "titulo": "A conquista e a divisão de Canaã",
+    "periodo": "c. 1406–1380 a.C. · Josué",
+    "descricao": "Israel atravessou o Jordão em Gilgal, tomou Jericó e Ai, fez aliança com os gibeonitas e venceu as coligações do sul (Laquis) e do norte (Hazor). O tabernáculo foi armado em Siló, e em Siquém Josué renovou a aliança.",
+    "referencias": ["Josué 3:14-17", "Josué 6:20", "Josué 8:1", "Josué 10:1-15", "Josué 11:10", "Josué 18:1", "Josué 24:1, 15"],
+    "lugares": ["Gilgal 1", "Jericho 1", "Ai 1", "Gibeon", "Lachish", "Hebron", "Hazor 1", "Shiloh", "Shechem", "Jordan", "Salt Sea", "Sea of Galilee"],
+    "rotas": [
+      {"nome": "Campanha central e do sul", "lugares": ["Gilgal 1", "Jericho 1", "Ai 1", "Gibeon", "Lachish", "Hebron"]},
+      {"nome": "Campanha do norte", "lugares": ["Gilgal 1", "Hazor 1"]}
+    ]
+  },
+  {
+    "id": "juizes",
+    "titulo": "O tempo dos juízes",
+    "periodo": "c. 1380–1050 a.C. · Juízes, Rute, 1 Samuel 1–7",
+    "descricao": "Débora e Baraque venceram junto ao monte Tabor e Megido; Gideão saiu de Ofra; Sansão nasceu em Zorá e enfrentou os filisteus até Gaza; a tribo de Dã migrou para o norte. Em Siló servia Eli, e Samuel julgava em Ramá e Mispa. Rute chegou de Moabe a Belém.",
+    "referencias": ["Juízes 4:14-16", "Juízes 6:11", "Juízes 13:2", "Juízes 16:21", "Juízes 18:27-29", "Rute 1:22", "1 Samuel 7:15-17"],
+    "lugares": ["Megiddo", "Ophrah 2", "Zorah", "Gaza", "Dan", "Shiloh", "Ramah 1", "Mizpah 3", "Bethlehem 1", "Moab 1"],
+    "rotas": [
+      {"nome": "Migração de Dã", "lugares": ["Zorah", "Dan"]}
+    ]
+  },
+  {
+    "id": "reino-unido",
+    "titulo": "O reino de Davi e Salomão",
+    "periodo": "c. 1010–930 a.C. · 1 e 2 Samuel, 1 Reis 1–11",
+    "descricao": "Davi reinou primeiro em Hebrom e depois em Jerusalém, que conquistou dos jebuseus. O reino se estendeu de Dã a Berseba e, sob Salomão, do Eufrates ao Egito. Salomão construiu o templo e mantinha uma frota em Eziom-Geber, no golfo de Ácaba, e comerciava com Hirão de Tiro.",
+    "referencias": ["2 Samuel 5:3-7", "2 Samuel 24:2", "1 Reis 4:21-25", "1 Reis 6:1", "1 Reis 9:26"],
+    "lugares": ["Hebron", "Jerusalem", "Dan", "Beersheba 1", "Tyre", "Damascus", "Hamath 1", "Ezion-geber", "Ziklag", "Mahanaim", "Gath 1"],
+    "rotas": []
+  },
+  {
+    "id": "reino-dividido",
+    "titulo": "Os reinos de Israel e de Judá",
+    "periodo": "930–586 a.C. · 1 Reis 12 – 2 Reis 25",
+    "descricao": "Com a divisão, Jeroboão fez de Siquém e depois Tirza e Samaria as capitais do Norte, e pôs bezerros de ouro em Dã e Betel. Judá manteve Jerusalém e o templo. Samaria caiu diante da Assíria em 722 a.C.; Jerusalém, diante de Babilônia em 586 a.C.",
+    "referencias": ["1 Reis 12:16-20", "1 Reis 12:28-29", "1 Reis 16:24", "2 Reis 17:5-6", "2 Reis 25:8-10"],
+    "lugares": ["Samaria 1", "Shechem", "Tirzah", "Dan", "Bethel 1", "Jezreel 2", "Jerusalem", "Lachish", "Beersheba 1", "Megiddo", "Damascus", "Moab 1"],
+    "rotas": []
+  },
+  {
+    "id": "elias-eliseu",
+    "titulo": "Elias e Eliseu",
+    "periodo": "c. 870–800 a.C. · 1 Reis 17 – 2 Reis 13",
+    "descricao": "Elias se escondeu junto à torrente de Querite, foi sustentado pela viúva de Sarepta, desafiou os profetas de Baal no monte Carmelo, fugiu de Jezabel até Berseba e o Horebe. Eliseu, chamado em Abel-Meolá, ressuscitou o filho da sunamita e foi cercado em Dotã.",
+    "referencias": ["1 Reis 17:3, 9", "1 Reis 18:19-40", "1 Reis 19:3-8", "1 Reis 19:16-19", "2 Reis 4:8", "2 Reis 6:13-17"],
+    "lugares": ["Cherith", "Zarephath", "Mount Carmel", "Jezreel 2", "Beersheba 1", "Mount Horeb", "Abel-meholah", "Shunem", "Dothan", "Samaria 1", "Jericho 1", "Damascus"],
+    "rotas": [
+      {"nome": "Fuga de Elias", "lugares": ["Mount Carmel", "Jezreel 2", "Beersheba 1", "Mount Horeb"]}
+    ]
+  },
+  {
+    "id": "imperios",
+    "titulo": "Os impérios da profecia",
+    "periodo": "Daniel 2, 7 e 8",
+    "descricao": "Os reinos que Daniel viu na estátua e nos animais tiveram suas capitais nestes lugares: Babilônia (cabeça de ouro, leão), Medo-Pérsia com Susã e Ecbatana (prata, urso, carneiro), Grécia (bronze, leopardo, bode) e Roma (ferro, quarto animal). Daniel recebeu visões em Babilônia e junto ao rio Ulai, em Susã.",
+    "referencias": ["Daniel 2:37-40", "Daniel 7:2-7", "Daniel 8:2, 20-21"],
+    "lugares": ["Babylon 1", "Nineveh", "Susa", "Ecbatana", "Athens", "Rome", "Jerusalem", "Carchemish", "Euphrates", "Tigris"],
+    "rotas": []
+  },
+  {
+    "id": "exilio",
+    "titulo": "O exílio e o retorno",
+    "periodo": "605–430 a.C. · 2 Reis 24–25, Esdras, Neemias, Ester, Ezequiel",
+    "descricao": "Nabucodonosor levou cativos de Jerusalém para Babilônia em três deportações. Ezequiel profetizou junto ao rio Quebar; Daniel serviu na corte. Com o decreto de Ciro os judeus voltaram com Zorobabel; depois vieram Esdras e Neemias. Ester e Neemias viveram em Susã.",
+    "referencias": ["2 Reis 24:14-16", "Ezequiel 1:1", "Esdras 1:1-4", "Esdras 7:6-9", "Neemias 1:1", "Ester 1:2"],
+    "lugares": ["Jerusalem", "Carchemish", "Babylon 1", "Chebar", "Susa", "Haran", "Damascus", "Euphrates"],
+    "rotas": [
+      {"nome": "Rota do cativeiro (pelo Crescente Fértil)", "lugares": ["Jerusalem", "Damascus", "Carchemish", "Babylon 1"]},
+      {"nome": "Retorno", "lugares": ["Babylon 1", "Carchemish", "Damascus", "Jerusalem"]}
+    ]
+  },
+  {
+    "id": "jesus-palestina",
+    "titulo": "A Palestina no tempo de Jesus",
+    "periodo": "c. 4 a.C. – 31 d.C. · Evangelhos",
+    "descricao": "Jesus nasceu em Belém, cresceu em Nazaré e fez de Cafarnaum o centro do Seu ministério na Galileia. O primeiro milagre foi em Caná; junto ao poço de Sicar falou com a samaritana; em Cesareia de Filipe, Pedro O confessou como o Cristo. Em Betânia ressuscitou Lázaro; em Jerusalém foi crucificado e ressuscitou.",
+    "referencias": ["Mateus 2:1", "Lucas 2:39-40", "Mateus 4:13", "João 2:1-11", "João 4:5-7", "Mateus 16:13-16", "João 11:1, 43-44"],
+    "lugares": ["Bethlehem 1", "Nazareth", "Cana", "Capernaum", "Bethsaida 1", "Tiberias", "Nain", "Sea of Galilee", "Caesarea Philippi", "Sychar", "Jericho 1", "Bethany 1", "Jerusalem", "Emmaus", "Jordan", "Salt Sea", "Tyre", "Sidon", "Caesarea"],
+    "rotas": []
+  },
+  {
+    "id": "paixao",
+    "titulo": "Jerusalém: a última semana",
+    "periodo": "31 d.C. · Mateus 21–28, João 12–20",
+    "descricao": "De Betânia, Jesus entrou em Jerusalém montado num jumento, descendo o monte das Oliveiras. Depois da última ceia, orou no Getsêmani, foi julgado e crucificado no Gólgota, fora dos muros. No caminho de Emaús, o Ressuscitado apareceu a dois discípulos.",
+    "referencias": ["Mateus 21:1-11", "Mateus 26:36", "João 19:17-18", "Lucas 24:13-31", "Atos 1:12"],
+    "lugares": ["Bethany 1", "Mount of Olives", "Jerusalem", "Gethsemane", "Golgotha", "Emmaus"],
+    "rotas": [
+      {"nome": "Entrada triunfal", "lugares": ["Bethany 1", "Mount of Olives", "Jerusalem"]},
+      {"nome": "Caminho de Emaús", "lugares": ["Jerusalem", "Emmaus"]}
+    ]
+  },
+  {
+    "id": "paulo-1",
+    "titulo": "Primeira viagem missionária de Paulo",
+    "periodo": "c. 46–48 d.C. · Atos 13–14",
+    "descricao": "Enviados pela igreja de Antioquia, Paulo e Barnabé passaram por Chipre (Salamina e Pafos) e pelo sul da Ásia Menor: Perge, Antioquia da Pisídia, Icônio, Listra e Derbe, voltando pelo mesmo caminho para fortalecer as igrejas.",
+    "referencias": ["Atos 13:1-4", "Atos 13:13-14", "Atos 14:1-7", "Atos 14:20-26"],
+    "lugares": ["Antioch 1", "Seleucia", "Salamis", "Paphos", "Perga", "Antioch 2", "Iconium", "Lystra", "Derbe", "Attalia"],
+    "rotas": [
+      {"nome": "Ida e volta", "lugares": ["Antioch 1", "Seleucia", "Salamis", "Paphos", "Perga", "Antioch 2", "Iconium", "Lystra", "Derbe", "Lystra", "Iconium", "Antioch 2", "Perga", "Attalia", "Antioch 1"]}
+    ]
+  },
+  {
+    "id": "paulo-2",
+    "titulo": "Segunda viagem missionária de Paulo",
+    "periodo": "c. 49–52 d.C. · Atos 15:36 – 18:22",
+    "descricao": "Com Silas, Paulo revisitou as igrejas da Galácia e, chamado em visão em Trôade, levou o evangelho à Europa: Filipos, Tessalônica, Bereia, Atenas e Corinto, onde ficou um ano e meio. Voltou por Éfeso e Cesareia.",
+    "referencias": ["Atos 15:40-41", "Atos 16:8-12", "Atos 17:1, 10, 15", "Atos 18:1, 11", "Atos 18:18-22"],
+    "lugares": ["Antioch 1", "Derbe", "Lystra", "Troas", "Neapolis", "Philippi", "Amphipolis", "Thessalonica", "Berea", "Athens", "Corinth", "Cenchreae", "Ephesus", "Caesarea", "Jerusalem"],
+    "rotas": [
+      {"nome": "Itinerário", "lugares": ["Antioch 1", "Derbe", "Lystra", "Troas", "Neapolis", "Philippi", "Amphipolis", "Thessalonica", "Berea", "Athens", "Corinth", "Cenchreae", "Ephesus", "Caesarea", "Jerusalem", "Antioch 1"]}
+    ]
+  },
+  {
+    "id": "paulo-3",
+    "titulo": "Terceira viagem missionária de Paulo",
+    "periodo": "c. 53–57 d.C. · Atos 18:23 – 21:17",
+    "descricao": "Paulo passou cerca de três anos em Éfeso, visitou a Macedônia e a Grécia, e voltou pela costa: Trôade (onde ressuscitou Êutico), Assôs, Mitilene, Mileto (despedida dos anciãos de Éfeso), Cós, Rodes, Pátara, Tiro, Ptolemaida e Cesareia, até Jerusalém, onde foi preso.",
+    "referencias": ["Atos 19:1, 10", "Atos 20:1-6", "Atos 20:7-12", "Atos 20:13-17", "Atos 21:1-8"],
+    "lugares": ["Antioch 1", "Ephesus", "Philippi", "Corinth", "Troas", "Assos", "Mitylene", "Miletus", "Cos", "Rhodes 1", "Patara", "Tyre", "Ptolemais", "Caesarea", "Jerusalem"],
+    "rotas": [
+      {"nome": "Itinerário", "lugares": ["Antioch 1", "Ephesus", "Troas", "Philippi", "Corinth", "Philippi", "Troas", "Assos", "Mitylene", "Miletus", "Cos", "Rhodes 1", "Patara", "Tyre", "Ptolemais", "Caesarea", "Jerusalem"]}
+    ]
+  },
+  {
+    "id": "paulo-roma",
+    "titulo": "A viagem de Paulo a Roma",
+    "periodo": "c. 59–60 d.C. · Atos 27–28",
+    "descricao": "Preso, Paulo apelou para César e embarcou em Cesareia. Passou por Sidom e Mirra, chegou a Bons Portos, em Creta, e naufragou em Malta. Seguiu por Siracusa, Régio e Putéoli, e os irmãos de Roma foram ao seu encontro na Praça de Ápio e nas Três Vendas.",
+    "referencias": ["Atos 27:1-8", "Atos 27:41-44", "Atos 28:1, 11-16"],
+    "lugares": ["Caesarea", "Sidon", "Myra", "Fair Havens", "Crete", "Malta", "Syracuse", "Rhegium", "Puteoli", "Forum of Appius", "Three Taverns", "Rome"],
+    "rotas": [
+      {"nome": "Itinerário", "lugares": ["Caesarea", "Sidon", "Myra", "Fair Havens", "Malta", "Syracuse", "Rhegium", "Puteoli", "Forum of Appius", "Three Taverns", "Rome"]}
+    ]
+  },
+  {
+    "id": "sete-igrejas",
+    "titulo": "As sete igrejas do Apocalipse",
+    "periodo": "c. 95 d.C. · Apocalipse 1–3",
+    "descricao": "Da ilha de Patmos, João enviou as mensagens de Cristo às sete igrejas da Ásia, ligadas por uma estrada circular na ordem em que aparecem no livro. Na interpretação adventista, elas também representam etapas da história da igreja até a volta de Jesus.",
+    "referencias": ["Apocalipse 1:9-11", "Apocalipse 2:1", "Apocalipse 3:14"],
+    "lugares": ["Patmos", "Ephesus", "Smyrna", "Pergamum", "Thyatira", "Sardis", "Philadelphia", "Laodicea"],
+    "rotas": [
+      {"nome": "A ordem das cartas", "lugares": ["Ephesus", "Smyrna", "Pergamum", "Thyatira", "Sardis", "Philadelphia", "Laodicea"]}
+    ]
+  }
+]

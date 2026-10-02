@@ -1,0 +1,12 @@
+[
+  {"cru": "entendi-\r\nmento", "esperado": "entendimento"},
+  {"cru": "intitulou\u0002se príncipe", "esperado": "intitulou-se príncipe"},
+  {"cru": "dá-\r\nlhe o pão", "esperado": "dá-lhe o pão"},
+  {"cru": "Ameri\u0002cana", "esperado": "Americana"},
+  {"cru": "ali [72] porta\r\naberta", "esperado": "ali porta aberta"},
+  {"cru": "[70] porta aberta, e ninguém", "esperado": "porta aberta, e ninguém"},
+  {"cru": "  muitos   espaços\r\n\r\n e linhas ", "esperado": "muitos espaços e linhas"},
+  {"cru": "Mateus 4:2-4.", "esperado": "Mateus 4:2-4."},
+  {"cru": "con­descender", "esperado": "condescender"},
+  {"cru": "“Está escrito”\r\n(Mateus 4:4), disse", "esperado": "“Está escrito” (Mateus 4:4), disse"}
+]
