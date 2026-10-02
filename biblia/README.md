@@ -50,7 +50,7 @@ estudo aberta.
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
 | Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
-| Notas de estudo | 3.203 (Gênesis a Ester, Isaías a Malaquias e todo o Novo Testamento) |
+| Notas de estudo | 3.358 (toda a Bíblia, menos Salmos) |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -137,7 +137,7 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-Todo o Novo Testamento, de Gênesis a Ester e todos os profetas (Isaías a Malaquias) já têm notas (3.203),
+Todo o Novo Testamento e o Antigo, menos Salmos, já têm notas (3.358),
 escritas para o app em `ferramentas/notas/NN-livro.txt`, num formato simples
 de revisar:
 

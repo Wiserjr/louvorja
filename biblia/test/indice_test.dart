@@ -333,6 +333,23 @@ void main() {
       final n = await Estudo.instancia.notas(39, 3, 10);
       expect(n.single.texto, contains('dízimo'));
     });
+
+    test(
+      'Jó, Provérbios, Eclesiastes e Cantares em todos os capítulos',
+      () async {
+        for (final (livro, caps) in [(18, 42), (20, 31), (21, 12), (22, 8)]) {
+          for (var c = 1; c <= caps; c++) {
+            final rows = await Banco.instancia.estudo.rawQuery(
+              'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
+              [livro, c * 1000, c * 1000 + 999],
+            );
+            expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
+          }
+        }
+        final n = await Estudo.instancia.notas(21, 9, 5);
+        expect(n.single.texto, contains('inconscientes'));
+      },
+    );
   });
 
   group('guia sinótico', () {
