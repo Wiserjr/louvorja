@@ -203,7 +203,7 @@ void main() {
       expect(n.single.texto, contains('457 a.C.'));
     });
 
-    test('de Gênesis a Rute, todos os capítulos têm notas', () async {
+    test('de Gênesis a 2 Samuel, todos os capítulos têm notas', () async {
       for (final (livro, caps) in [
         (1, 50),
         (2, 40),
@@ -213,6 +213,8 @@ void main() {
         (6, 24),
         (7, 21),
         (8, 4),
+        (9, 31),
+        (10, 24),
       ]) {
         for (var c = 1; c <= caps; c++) {
           final rows = await Banco.instancia.estudo.rawQuery(
@@ -229,6 +231,11 @@ void main() {
     test('Levítico 16 explica o Dia da Expiação e Azazel', () async {
       final n = await Estudo.instancia.notas(3, 16, 21);
       expect(n.single.texto, contains('Satanás'));
+    });
+
+    test('1 Samuel 28: a aparição em En-Dor não era Samuel', () async {
+      final n = await Estudo.instancia.notas(9, 28, 15);
+      expect(n.single.texto, contains('não era Samuel'));
     });
   });
 
