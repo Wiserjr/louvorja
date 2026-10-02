@@ -259,6 +259,21 @@ void main() {
       final n = await Estudo.instancia.notas(15, 7, 21);
       expect(n.single.texto, contains('Daniel 9:25'));
     });
+
+    test(
+      'Isaías: todos os capítulos; 53 leva a "A vinda de um libertador"',
+      () async {
+        for (var c = 1; c <= 66; c++) {
+          final rows = await Banco.instancia.estudo.rawQuery(
+            'SELECT count(*) AS n FROM nota WHERE livro=23 AND ini BETWEEN ? AND ?',
+            [c * 1000, c * 1000 + 999],
+          );
+          expect(rows.first['n'], greaterThan(0), reason: 'Isaías $c');
+        }
+        final n = await Estudo.instancia.notas(23, 53, 5);
+        expect(n.single.texto, contains('substituição'));
+      },
+    );
   });
 
   group('guia sinótico', () {
