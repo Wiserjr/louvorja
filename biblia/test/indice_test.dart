@@ -306,6 +306,33 @@ void main() {
         expect(n.single.texto, contains('Por que existe o sofrimento'));
       },
     );
+
+    test('os doze profetas menores têm notas em todos os capítulos', () async {
+      for (final (livro, caps) in [
+        (28, 14),
+        (29, 3),
+        (30, 9),
+        (31, 1),
+        (32, 4),
+        (33, 7),
+        (34, 3),
+        (35, 3),
+        (36, 3),
+        (37, 2),
+        (38, 14),
+        (39, 4),
+      ]) {
+        for (var c = 1; c <= caps; c++) {
+          final rows = await Banco.instancia.estudo.rawQuery(
+            'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
+            [livro, c * 1000, c * 1000 + 999],
+          );
+          expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
+        }
+      }
+      final n = await Estudo.instancia.notas(39, 3, 10);
+      expect(n.single.texto, contains('dízimo'));
+    });
   });
 
   group('guia sinótico', () {
