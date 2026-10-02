@@ -26,9 +26,8 @@ anotações.
 - Introdução a cada um dos 66 livros.
 - 18 mapas (Abraão, Êxodo, reinos de Israel e Judá, viagens de Paulo, sete
   igrejas...) e os lugares de cada versículo num minimapa.
-- Notas de estudo em todo o Novo Testamento, em todos os livros históricos
-  do Antigo, nos livros poéticos (menos Salmos) e em todos os profetas
-  (3.358 notas), com as ligações aos capítulos de Ellen G. White; em Daniel e no Apocalipse, a
+- Notas de estudo em toda a Bíblia (3.571 notas, nos 1.189 capítulos dos 66
+  livros), com as ligações aos capítulos de Ellen G. White; em Daniel e no Apocalipse, a
   leitura historicista: os impérios, o chifre pequeno, as 70 semanas e os
   2.300 dias, as sete igrejas, selos e trombetas, as três mensagens angélicas
   e o milênio.

@@ -14,7 +14,8 @@ App para **Android e Windows** que junta, em cada versículo:
   ordenadas por relevância;
 - **introdução a cada livro**: autor, data, local, tema, versículo-chave,
   esboço, mensagem, Cristo no livro e onde Ellen G. White trata dele;
-- **notas de estudo** por versículo (opcionais; ver *Notas*, abaixo);
+- **notas de estudo** em toda a Bíblia: 3.571 notas nos 1.189 capítulos (ver
+  *Notas*, abaixo);
 - **mapas**: 18 mapas temáticos (Abraão, Êxodo, conquista, reinos, Elias e
   Eliseu, impérios de Daniel, exílio, Palestina de Jesus, as três viagens de
   Paulo e a viagem a Roma, as sete igrejas) e 1.156 lugares bíblicos com nome
@@ -50,7 +51,7 @@ estudo aberta.
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
 | Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
-| Notas de estudo | 3.358 (toda a Bíblia, menos Salmos) |
+| Notas de estudo | 3.571, em todos os 1.189 capítulos |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -137,7 +138,7 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-Todo o Novo Testamento e o Antigo, menos Salmos, já têm notas (3.358),
+Toda a Bíblia tem notas: 3.571, em todos os 1.189 capítulos dos 66 livros,
 escritas para o app em `ferramentas/notas/NN-livro.txt`, num formato simples
 de revisar:
 
@@ -149,8 +150,9 @@ de revisar:
 O `construir_estudo.py` confere que cada versículo existe e que toda
 citação do tipo "O Desejado, cap. 12" ou "Parábolas de Jesus, cap. 2, "A
 sementeira da verdade"" aponta para um capítulo que existe no índice (e, com
-título, que o título bate). Para os demais livros do Antigo Testamento, escreva no mesmo formato ou
-use o gerador abaixo, que pula os capítulos que já têm notas.
+título, que o título bate). Para acrescentar ou corrigir uma nota, edite o
+arquivo do livro e rode o `construir_estudo.py`. O gerador abaixo só escreve
+notas para capítulos que ainda não têm nenhuma.
 
 `ferramentas/gerar_notas.py` escreve notas curtas por versículo com a API do
 Claude, no estilo das Bíblias de estudo: contexto histórico, sentido das
