@@ -274,6 +274,23 @@ void main() {
         expect(n.single.texto, contains('substituição'));
       },
     );
+
+    test(
+      'Jeremias e Lamentações: todos os capítulos; a nova aliança',
+      () async {
+        for (final (livro, caps) in [(24, 52), (25, 5)]) {
+          for (var c = 1; c <= caps; c++) {
+            final rows = await Banco.instancia.estudo.rawQuery(
+              'SELECT count(*) AS n FROM nota WHERE livro=? AND ini BETWEEN ? AND ?',
+              [livro, c * 1000, c * 1000 + 999],
+            );
+            expect(rows.first['n'], greaterThan(0), reason: '$livro:$c');
+          }
+        }
+        final n = await Estudo.instancia.notas(24, 31, 33);
+        expect(n.single.texto, contains('coração'));
+      },
+    );
   });
 
   group('guia sinótico', () {
