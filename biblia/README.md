@@ -50,7 +50,7 @@ estudo aberta.
 | Mapas temáticos | 18 |
 | Temas / estudos bíblicos | 50 / 16 |
 | Guia sinótico | 173 episódios; 139 ligados a capítulos de Ellen G. White |
-| Notas de estudo | 2.399 (Gênesis a 2 Reis, Daniel e todo o Novo Testamento) |
+| Notas de estudo | 2.527 (Gênesis a 2 Crônicas, Daniel e todo o Novo Testamento) |
 
 ## Como os livros de Ellen G. White entram sem serem redistribuídos
 
@@ -137,7 +137,7 @@ em inglês); as exceções estão em `NOMES`, no `construir_mapas.py`.
 
 ### Notas de estudo
 
-Todo o Novo Testamento, de Gênesis a 2 Reis e Daniel já têm notas (2.399),
+Todo o Novo Testamento, de Gênesis a 2 Crônicas e Daniel já têm notas (2.527),
 escritas para o app em `ferramentas/notas/NN-livro.txt`, num formato simples
 de revisar:
 

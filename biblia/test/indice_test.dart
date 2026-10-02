@@ -203,7 +203,7 @@ void main() {
       expect(n.single.texto, contains('457 a.C.'));
     });
 
-    test('de Gênesis a 2 Reis, todos os capítulos têm notas', () async {
+    test('de Gênesis a 2 Crônicas, todos os capítulos têm notas', () async {
       for (final (livro, caps) in [
         (1, 50),
         (2, 40),
@@ -217,6 +217,8 @@ void main() {
         (10, 24),
         (11, 22),
         (12, 25),
+        (13, 29),
+        (14, 36),
       ]) {
         for (var c = 1; c <= caps; c++) {
           final rows = await Banco.instancia.estudo.rawQuery(
@@ -243,6 +245,11 @@ void main() {
     test('1 Reis 18 leva a Profetas e Reis, "O Carmelo"', () async {
       final n = await Estudo.instancia.notas(11, 18, 38);
       expect(n.single.texto, contains('O Carmelo'));
+    });
+
+    test('2 Crônicas 7:14 tem nota sobre o reavivamento', () async {
+      final n = await Estudo.instancia.notas(14, 7, 14);
+      expect(n.single.texto, contains('reavivamento'));
     });
   });
 
