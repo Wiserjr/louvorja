@@ -291,6 +291,21 @@ void main() {
         expect(n.single.texto, contains('coração'));
       },
     );
+
+    test(
+      'Ezequiel: todos os capítulos; 28 leva a "Por que existe o sofrimento"',
+      () async {
+        for (var c = 1; c <= 48; c++) {
+          final rows = await Banco.instancia.estudo.rawQuery(
+            'SELECT count(*) AS n FROM nota WHERE livro=26 AND ini BETWEEN ? AND ?',
+            [c * 1000, c * 1000 + 999],
+          );
+          expect(rows.first['n'], greaterThan(0), reason: 'Ezequiel $c');
+        }
+        final n = await Estudo.instancia.notas(26, 28, 15);
+        expect(n.single.texto, contains('Por que existe o sofrimento'));
+      },
+    );
   });
 
   group('guia sinótico', () {
