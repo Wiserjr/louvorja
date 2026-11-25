@@ -174,6 +174,38 @@ if (-not $SemCompilar) {
     }
 }
 
+# --- conferencia dos APKs ---
+# O -SemCompilar reaproveita build\publicar\, e essa pasta sobrevive entre
+# versoes. Na v1.0.11 ela guardava a compilacao da 1.0.10: a release saiu com o
+# manifesto anunciando 12 e os binarios em 11, e todo mundo que tentou se
+# atualizar recebeu "O arquivo baixado nao corresponde a esta atualizacao".
+# Conferir o que esta na pasta custa um segundo e nao depende de lembrar.
+$aapt = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Android\Sdk\build-tools\*\aapt2.exe') -ErrorAction SilentlyContinue |
+    Sort-Object FullName | Select-Object -Last 1
+if (-not $aapt) {
+    if ($SemCompilar) {
+        throw ('Sem aapt2 para conferir os APKs de build\publicar\, e -SemCompilar reaproveita o que estiver la. ' +
+               'Rode sem -SemCompilar para compilar do zero.')
+    }
+} else {
+    Write-Output ''
+    Write-Output 'Conferindo os APKs...'
+    foreach ($app in $apps | Where-Object { $_.Mudou }) {
+        foreach ($abi in $abis) {
+            $arq = "$saida\$($app.Prefixo)-$abi.apk"
+            if (-not (Test-Path $arq)) { throw "APK ausente: $arq. Rode sem -SemCompilar." }
+            $info = & $aapt.FullName dump badging $arq | Select-Object -First 1
+            if ($info -notmatch "versionCode='(\d+)'") { throw "Nao consegui ler o versionCode de $arq." }
+            $base = [int]$Matches[1] % 1000
+            if ($base -ne $app.Codigo) {
+                throw ("$arq tem versionCode base $base, mas $($app.Prefixo) esta sendo publicado como $($app.Codigo). " +
+                       'Rode sem -SemCompilar: a pasta tem binarios de outra versao.')
+            }
+        }
+        Write-Output "  $($app.Prefixo): os tres APKs estao na versao $($app.Codigo)."
+    }
+}
+
 # --- commits ---
 Write-Output ''
 Write-Output 'Enviando os commits...'
