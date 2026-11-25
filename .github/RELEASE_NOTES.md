@@ -69,6 +69,13 @@ de músicas, não o aplicativo.
 
 ## Nesta versão
 
+- **Atualização automática mais estável.** O app passou a consultar um endereço
+  fixo em vez da última release publicada. Na prática: o Louvor JA e o app
+  Hinários agora se atualizam de forma independente — você deixa de receber
+  aviso de versão nova de um por causa de mudança no outro.
+
+## Da versão anterior
+
 - **Acervo atualizado para a versão 186**, com 167 vídeos novos do Novo
   Hinário Adventista (hinos 228 em diante), as playlists de 201 a 600 e os
   canais reorganizados.

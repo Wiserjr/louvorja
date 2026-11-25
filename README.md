@@ -511,6 +511,29 @@ O repositório é privado. Para enviar ao GitHub e criar a release com os APKs:
 powershell -ExecutionPolicy Bypass -File publicar.ps1
 ```
 
+### Dois apps, dois ciclos
+
+O mesmo código gera dois apps (`productFlavors` no `build.gradle.kts`), e cada
+um tem a sua versão e a sua release:
+
+| App | Versão em | Tag | Notas |
+|---|---|---|---|
+| Louvor JA | `pubspec.yaml` | `v1.0.12` | `.github/RELEASE_NOTES.md` |
+| Hinários | `versoes.json` | `hinarios-v1.0.11` | `.github/RELEASE_NOTES_HINARIOS.md` |
+
+O `publicar.ps1` compila e publica **só os apps cujo número subiu** — o
+Hinários muda poucas vezes por ano e não precisa de release a cada avanço do
+Louvor JA.
+
+Os manifestos da atualização automática ficam numa release de tag fixa,
+`atualizacao`, fora do ciclo de versão. Antes eles iam em `releases/latest`, o
+que prendia os dois apps ao mesmo ciclo: só uma release pode ser a mais
+recente, então publicar um obrigava a republicar o outro.
+
+O `versionCode` de cada app **nunca pode diminuir nem repetir** — é o número
+que o app instalado compara. Por isso o Hinários começou em 12, onde a 1.0.11
+o deixou: reiniciar em 1 deixaria todo mundo sem receber atualização.
+
 O script roda `flutter analyze`, os testes e a conferência do catálogo, compila
 os três APKs por arquitetura, envia os commits e publica a release. A **tag vem do `version:` do
 pubspec.yaml** — para lançar a 1.0.4, suba a versão lá e rode o script. Se a tag

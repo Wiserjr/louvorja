@@ -15,9 +15,10 @@ import 'download.dart';
 /// sistema — que sempre pede a confirmação da pessoa. Ninguém precisa mais
 /// mandar APK por WhatsApp a cada versão.
 ///
-/// O canal é a última release do GitHub, onde o `publicar.ps1` já põe os APKs:
+/// O canal é uma release de tag fixa, onde o `publicar.ps1` põe um manifesto
+/// por app:
 ///
-///     https://github.com/Wiserjr/louvorja/releases/latest/download/atualizacao-{pacote}.json
+///     https://github.com/Wiserjr/louvorja/releases/download/atualizacao/atualizacao-{pacote}.json
 ///
 /// Um manifesto por app, com o identificador no nome, porque o mesmo código
 /// gera dois apps (Louvor JA e Hinários, ver `-P paralelo=true`) que convivem
@@ -39,6 +40,17 @@ class Atualizacao {
   static final Atualizacao instancia = Atualizacao._();
 
   static const repositorio = 'Wiserjr/louvorja';
+
+  /// Tag fixa que guarda os manifestos, uma por app dentro dela.
+  ///
+  /// Antes era `releases/latest`, e isso amarrava os dois apps ao mesmo ciclo:
+  /// só uma release pode ser a mais recente, então publicar o Louvor JA
+  /// obrigava a republicar o Hinários junto, senão um dos dois passava a ler um
+  /// manifesto velho. Numa tag fixa cada manifesto se move quando o seu app se
+  /// move, e o Hinários — que muda poucas vezes por ano — para de receber
+  /// atualização de 47 MB toda vez que o Louvor JA avança.
+  static const tagManifestos = 'atualizacao';
+
   static const _canal = MethodChannel('br.com.wisejr.louvorja/atualizacao');
 
   /// O manifesto é pequeno; um teto baixo barra resposta estranha cedo.
@@ -65,7 +77,7 @@ class Atualizacao {
     final abis = (await _canal.invokeListMethod<String>('abis')) ?? const [];
 
     final url = Uri.parse(
-      'https://github.com/$repositorio/releases/latest/download/'
+      'https://github.com/$repositorio/releases/download/$tagManifestos/'
       'atualizacao-$pacote.json',
     );
     final corpo = await _get(url, teto: _tetoManifesto);
