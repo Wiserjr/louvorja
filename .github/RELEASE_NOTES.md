@@ -69,6 +69,16 @@ de músicas, não o aplicativo.
 
 ## Nesta versão
 
+- **Acervo atualizado para a versão 186**, com 167 vídeos novos do Novo
+  Hinário Adventista (hinos 228 em diante), as playlists de 201 a 600 e os
+  canais reorganizados.
+- **Músicas em Opus.** O acervo foi reencodificado e os arquivos ficaram cerca
+  de um terço menores. Se você copiou a pasta do PC antes disso, **não precisa
+  recopiar nada**: o app encontra os MP3 que já estão no seu aparelho. O que
+  for baixado daqui em diante vem no formato novo.
+
+## Da versão anterior
+
 - **Atualização automática.** Esta é a última versão que você instala à mão:
   daqui em diante o app avisa quando houver versão nova, baixa e pede a sua
   confirmação para instalar. Também em *Ajustes → Procurar atualização*.
