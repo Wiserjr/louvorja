@@ -12,6 +12,21 @@ estavam numa camada desacoplada do executável.
 > [Wiserjr/biblia-egw](https://github.com/Wiserjr/biblia-egw). Ela baixa as
 > traduções do catálogo deste app e tem releases próprias.
 
+## Baixar
+
+Dois apps saem deste repositório, cada um em uma release própria e com versão
+própria:
+
+| App | Baixar | Tamanho |
+|---|---|---|
+| **Louvor JA** — acervo completo e Bíblia | [Última versão](https://github.com/Wiserjr/louvorja/releases/latest) | 45–49 MB |
+| **Hinários** — só os dois hinários | [Última versão](https://github.com/Wiserjr/louvorja/releases?q=hinarios) | 17–21 MB |
+
+Em cada release há três APKs; na maioria dos celulares atuais é o `arm64-v8a`.
+O Hinários não aparece na página inicial de Releases porque o selo *Latest*
+fica sempre com o Louvor JA — é por ele que as versões antigas procuram
+atualização. Os dois se atualizam sozinhos pelo próprio app.
+
 ## O que vem de onde
 
 | Origem | Destino |
