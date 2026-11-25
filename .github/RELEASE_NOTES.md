@@ -75,6 +75,10 @@ de músicas, não o aplicativo.
   como se fosse só o caminho. Corrigido, e as faixas e capas já gravadas errado
   são consertadas sozinhas na primeira abertura — não precisa sincronizar de
   novo nem reinstalar.
+- **"Calculando o que falta" não demora mais.** Para decidir o que baixar, o app
+  consultava a pasta de músicas arquivo por arquivo, e num lote grande (os dois
+  hinários, cantado e playback) isso levava minutos. Agora ele lê cada pasta uma
+  vez só.
 
 ## Da versão anterior
 

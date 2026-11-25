@@ -174,11 +174,13 @@ class FilaDownload {
 
   /// Descarta o que já existe e devolve só o que falta baixar.
   Future<List<ItemDownload>> pendentes(List<ItemDownload> itens) async {
-    final falta = <ItemDownload>[];
-    for (final i in itens) {
-      if (!await Midia.instancia.existe(i.caminho)) falta.add(i);
-    }
-    return falta;
+    final existentes = await Midia.instancia.existem(
+      itens.map((i) => i.caminho),
+    );
+    return [
+      for (final i in itens)
+        if (!existentes.contains(i.caminho)) i,
+    ];
   }
 
   static int bytesDe(List<ItemDownload> itens) =>

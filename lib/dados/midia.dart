@@ -84,15 +84,28 @@ class Midia {
     final db = await Banco.usuario;
     final sufixo = sufixoDe(caminhoRelativo);
 
-    final cache = await db.query(
-      'midia',
-      columns: ['uri'],
-      where: 'chave = ? OR chave = ?',
-      whereArgs: [caminhoRelativo, sufixo],
-      limit: 1,
-    );
-    if (cache.isNotEmpty) {
-      final uri = cache.first['uri'] as String;
+    // O índice é consultado com os dois formatos de uma vez: o catálogo pode
+    // pedir `.opus` enquanto o índice (gravado quando o catálogo ainda dizia
+    // `.mp3`) só conhece o outro nome. Sem isto, o acerto no índice virava uma
+    // ida ao seletor de pastas do sistema — lenta — para cada faixa.
+    final alt = tentarOutroFormato ? trocarFormato(caminhoRelativo) : null;
+    final candidatas = [
+      caminhoRelativo,
+      sufixo,
+      if (alt != null) ...[alt, sufixoDe(alt)],
+    ];
+    final achadas = {
+      for (final r in await db.query(
+        'midia',
+        columns: ['chave', 'uri'],
+        where: 'chave IN (${List.filled(candidatas.length, '?').join(',')})',
+        whereArgs: candidatas,
+      ))
+        r['chave'] as String: r['uri'] as String,
+    };
+    for (final chave in candidatas) {
+      final uri = achadas[chave];
+      if (uri == null) continue;
       // O que veio do download (file://) pode ter sido apagado por "Apagar
       // hinos/músicas baixadas". Confiar no índice aí faria o player tentar
       // tocar um arquivo que não existe, e a lista dizer "baixado". Conferir
@@ -102,7 +115,7 @@ class Midia {
           await File(Uri.parse(uri).toFilePath()).exists()) {
         return uri;
       }
-      await invalidar(caminhoRelativo);
+      await db.delete('midia', where: 'chave = ?', whereArgs: [chave]);
     }
 
     // 1. pasta escolhida pelo usuário
@@ -127,9 +140,8 @@ class Midia {
     //
     // `tentarOutroFormato: false` corta a recursão: sem isso o .opus pediria o
     // .mp3, que pediria o .opus de volta, indefinidamente.
-    final alternativo = tentarOutroFormato ? trocarFormato(caminhoRelativo) : null;
-    if (alternativo != null) {
-      final uri = await uriDe(alternativo, tentarOutroFormato: false);
+    if (alt != null) {
+      final uri = await uriDe(alt, tentarOutroFormato: false);
       if (uri != null) {
         // Indexado sob o caminho PEDIDO, não sob o que achou: a próxima
         // consulta vem com o mesmo nome do catálogo e precisa acertar direto.
@@ -191,6 +203,81 @@ class Midia {
 
   Future<bool> existe(String caminhoRelativo) async =>
       await uriDe(caminhoRelativo) != null;
+
+  /// Dos [caminhos], quais já estão no aparelho — de uma vez só.
+  ///
+  /// Perguntar [existe] arquivo por arquivo é inviável num lote grande: cada
+  /// ausência custa uma caminhada pela árvore do seletor de pastas do sistema,
+  /// e os dois hinários somam 2.400 arquivos (cantado e playback). A tela
+  /// ficava em "Calculando o que falta..." por minutos.
+  ///
+  /// Aqui o índice vem inteiro numa consulta, e a pasta escolhida é **listada
+  /// uma vez por álbum**, não consultada uma vez por faixa. Tolera os dois
+  /// formatos de áudio, como [uriDe].
+  Future<Set<String>> existem(Iterable<String> caminhos) async {
+    final db = await Banco.usuario;
+    final indice = {
+      for (final r in await db.query('midia', columns: ['chave', 'uri']))
+        r['chave'] as String: r['uri'] as String,
+    };
+    final r = await raiz;
+    final pastas = <String, Map<String, String>?>{};
+    final achados = <String>{};
+
+    Future<bool> noIndice(String c) async {
+      for (final chave in [c, sufixoDe(c)]) {
+        final uri = indice[chave];
+        if (uri == null) continue;
+        if (!uri.startsWith('file://') ||
+            await File(Uri.parse(uri).toFilePath()).exists()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    Future<Map<String, String>?> conteudo(String pasta) async {
+      if (r == null) return null;
+      if (pastas.containsKey(pasta)) return pastas[pasta];
+      Map<String, String>? nomes;
+      try {
+        final doc = await _saf.child(r, pasta.split('/'));
+        if (doc != null) {
+          nomes = {
+            for (final i in await _saf.list(doc.uri))
+              if (!i.isDir) i.name: i.uri,
+          };
+        }
+      } catch (_) {
+        nomes = null;
+      }
+      return pastas[pasta] = nomes;
+    }
+
+    for (final c in caminhos) {
+      final alt = trocarFormato(c);
+      for (final cand in [c, ?alt]) {
+        if (await noIndice(cand)) {
+          achados.add(c);
+          break;
+        }
+        if (await (await Download.instancia.arquivoDe(cand)).exists()) {
+          achados.add(c);
+          break;
+        }
+        final corte = cand.lastIndexOf('/');
+        if (corte <= 0) continue;
+        final nomes = await conteudo(cand.substring(0, corte));
+        final uri = nomes?[cand.substring(corte + 1)];
+        if (uri != null) {
+          await _gravar(db, cand, uri, 0);
+          achados.add(c);
+          break;
+        }
+      }
+    }
+    return achados;
+  }
 
   /// Quantas faixas do catálogo o índice já resolve.
   ///

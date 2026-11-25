@@ -24,6 +24,10 @@ mexe no outro.
   "HTTP 404". O catálogo foi atualizado (recopiado sozinho na primeira
   abertura) e o plano B do download, que existia mas não funcionava, foi
   consertado. As suas configurações e os hinos já baixados ficam como estão.
+- **"Calculando o que falta" não demora mais.** Para decidir o que baixar, o app
+  consultava a pasta de músicas arquivo por arquivo, e num lote grande (os dois
+  hinários, cantado e playback) isso levava minutos. Agora ele lê cada pasta uma
+  vez só.
 
 ## O que tem
 
