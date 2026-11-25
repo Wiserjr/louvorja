@@ -2,7 +2,7 @@
   "_doc": "Versao do app Hinarios. O Louvor JA continua usando o version: do pubspec.yaml, que e o app principal deste projeto Flutter. Os dois compartilhavam esse numero ate a 1.0.11; a partir daqui cada um anda no seu ritmo, e o Hinarios so sobe quando muda de verdade.",
   "_atencao": "O codigo nunca pode diminuir nem repetir: e ele que o app instalado compara. Comecou em 12 porque e onde a 1.0.11 deixou o Hinarios - reiniciar em 1 deixaria todo mundo sem receber atualizacao.",
   "hinarios": {
-    "versao": "1.0.11",
-    "codigo": 12
+    "versao": "1.0.12",
+    "codigo": 13
   }
 }

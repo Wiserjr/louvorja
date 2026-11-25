@@ -33,7 +33,12 @@ class Banco {
   /// versões bíblicas e caminhos de mídia no formato da API.
   /// v3: coletâneas on-line (5 canais, 16 playlists, 1.150 vídeos) com as
   /// miniaturas embutidas como BLOB.
-  static const versaoCatalogo = 3;
+  ///
+  /// O Hinários tem a sua própria numeração. v4: nomes de arquivo do acervo 186
+  /// (o Hinário de 1996 passou de MP3 para Opus no servidor). A cópia antiga
+  /// pedia `.mp3` e levava 404 em cada hino. Só ele sobe: o Louvor JA guarda no
+  /// catálogo o que a sincronização trouxe, e recopiar o catálogo o descartaria.
+  static const versaoCatalogo = soHinarios ? 4 : 3;
 
   // Memoriza o **Future**, e nao o Database ja resolvido.
   //

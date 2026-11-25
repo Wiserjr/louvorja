@@ -17,6 +17,14 @@ Na dúvida, use o **arm64-v8a**.
 Convive com o Louvor JA completo: são dois apps separados, e instalar um não
 mexe no outro.
 
+## Nesta versão
+
+- **Os hinos voltam a baixar.** O Hinário de 1996 mudou de formato no servidor
+  e o app continuava pedindo o arquivo antigo, então o download terminava em
+  "HTTP 404". O catálogo foi atualizado (recopiado sozinho na primeira
+  abertura) e o plano B do download, que existia mas não funcionava, foi
+  consertado. As suas configurações e os hinos já baixados ficam como estão.
+
 ## O que tem
 
 - Os **1.214 hinos** dos dois hinários, com busca por número ou por nome.
