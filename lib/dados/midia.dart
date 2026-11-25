@@ -80,7 +80,7 @@ class Midia {
     return p.length < 2 ? caminho : '${p[p.length - 2]}/${p.last}';
   }
 
-  Future<String?> uriDe(String caminhoRelativo) async {
+  Future<String?> uriDe(String caminhoRelativo, {bool tentarOutroFormato = true}) async {
     final db = await Banco.usuario;
     final sufixo = sufixoDe(caminhoRelativo);
 
@@ -123,6 +123,40 @@ class Midia {
       return uri;
     }
 
+    // 3. o mesmo arquivo no outro formato de áudio
+    //
+    // `tentarOutroFormato: false` corta a recursão: sem isso o .opus pediria o
+    // .mp3, que pediria o .opus de volta, indefinidamente.
+    final alternativo = tentarOutroFormato ? trocarFormato(caminhoRelativo) : null;
+    if (alternativo != null) {
+      final uri = await uriDe(alternativo, tentarOutroFormato: false);
+      if (uri != null) {
+        // Indexado sob o caminho PEDIDO, não sob o que achou: a próxima
+        // consulta vem com o mesmo nome do catálogo e precisa acertar direto.
+        await _gravar(db, caminhoRelativo, uri, 0);
+        return uri;
+      }
+    }
+
+    return null;
+  }
+
+  /// O mesmo caminho no outro formato de áudio, ou `null` se não for áudio.
+  ///
+  /// O acervo migrou de MP3 para Opus na versão 186, e o servidor passou a
+  /// devolver 404 para os `.mp3`. Quem já tinha copiado a pasta do PC ficaria
+  /// sem tocar nada: o catálogo pede `X.opus` e no cartão está `X.mp3`.
+  ///
+  /// Recopiar 13 GB não é resposta, então a busca local tolera os dois nomes.
+  /// O download continua pedindo só o que o catálogo diz — lá o Opus é o único
+  /// que existe.
+  static String? trocarFormato(String caminho) {
+    const pares = {'.opus': '.mp3', '.mp3': '.opus'};
+    for (final par in pares.entries) {
+      if (caminho.toLowerCase().endsWith(par.key)) {
+        return caminho.substring(0, caminho.length - par.key.length) + par.value;
+      }
+    }
     return null;
   }
 
