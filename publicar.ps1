@@ -246,12 +246,20 @@ foreach ($app in $apps | Where-Object { $_.Mudou }) {
     $arquivos += $caminho
     Write-Output ''
     Write-Output "Publicando $($app.Prefixo) $($app.Versao)..."
+    # O selo Latest pertence ao Louvor JA, sempre. Os apps ate a 1.0.11 leem
+    # `releases/latest/download/atualizacao-{pacote}.json`: se o Hinarios ficar
+    # como Latest - e fica, por ser publicado depois -, o Louvor JA instalado
+    # procura o seu manifesto numa release que so tem o do outro app, recebe
+    # 404 e nunca mais se atualiza.
+    $ehPrincipal = ($app.Fonte -eq 'pubspec')
     $jaExiste = & $gh release view $app.Tag --json tagName
     if ($LASTEXITCODE -ne 0) {
-        & $gh release create $app.Tag $arquivos --title "$($app.Titulo) $($app.Versao)" --notes-file $app.Notas
+        & $gh release create $app.Tag $arquivos --title "$($app.Titulo) $($app.Versao)" `
+            --notes-file $app.Notas "--latest=$($ehPrincipal.ToString().ToLower())"
     } else {
         & $gh release upload $app.Tag $arquivos --clobber
-        & $gh release edit $app.Tag --notes-file $app.Notas
+        & $gh release edit $app.Tag --notes-file $app.Notas `
+            "--latest=$($ehPrincipal.ToString().ToLower())"
     }
     if ($LASTEXITCODE -ne 0) { throw "Falha ao publicar $($app.Prefixo)." }
 }
