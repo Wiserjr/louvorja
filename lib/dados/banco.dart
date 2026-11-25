@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../app_atual.dart';
+import 'download.dart';
 
 /// Acesso aos dois bancos do app, deliberadamente separados.
 ///
@@ -70,7 +71,43 @@ class Banco {
 
     // Gravável, e não somente leitura: a sincronização com a API atualiza o
     // catálogo no lugar. O asset continua sendo apenas a semente.
-    return openDatabase(destino);
+    final db = await openDatabase(destino);
+    await _repararCaminhos(db);
+    return db;
+  }
+
+  /// Troca por caminho relativo as URLs completas que a sincronização gravou
+  /// antes de saber lidar com elas (ver `Download.caminhoDaApi`).
+  ///
+  /// Sem isto, quem já sincronizou continuaria com faixas e capas que o
+  /// servidor responde com 404, mesmo depois de atualizar o app. É barato — só
+  /// toca linhas que começam com `http` — e idempotente.
+  static Future<void> _repararCaminhos(Database db) async {
+    const campos = [
+      ('musicas', 'audio'),
+      ('musicas', 'audio_pb'),
+      ('musicas', 'imagem'),
+      ('albums', 'capa'),
+      ('letras', 'imagem'),
+    ];
+    for (final (tabela, coluna) in campos) {
+      try {
+        final linhas = await db.rawQuery(
+          "SELECT rowid AS r, $coluna AS v FROM $tabela WHERE $coluna LIKE 'http%'",
+        );
+        if (linhas.isEmpty) continue;
+        final lote = db.batch();
+        for (final l in linhas) {
+          lote.rawUpdate('UPDATE $tabela SET $coluna = ? WHERE rowid = ?', [
+            Download.caminhoDaApi(l['v']),
+            l['r'],
+          ]);
+        }
+        await lote.commit(noResult: true);
+      } on DatabaseException {
+        // tabela ou coluna ausente neste catálogo: nada a reparar
+      }
+    }
   }
 
   /// Remove versões anteriores do catálogo para não acumular dezenas de MB a

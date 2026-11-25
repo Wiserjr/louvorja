@@ -69,6 +69,15 @@ de músicas, não o aplicativo.
 
 ## Nesta versão
 
+- **Álbuns novos baixam de novo.** Faixas que chegaram pela sincronização com o
+  servidor (como o CD "Somos a Igreja") falhavam no download com "HTTP 404": o
+  servidor passou a informar o endereço completo do arquivo, e o app o tratava
+  como se fosse só o caminho. Corrigido, e as faixas e capas já gravadas errado
+  são consertadas sozinhas na primeira abertura — não precisa sincronizar de
+  novo nem reinstalar.
+
+## Da versão anterior
+
 - **Atualização automática mais estável.** O app passou a consultar um endereço
   fixo em vez da última release publicada. Na prática: o Louvor JA e o app
   Hinários agora se atualizam de forma independente — você deixa de receber

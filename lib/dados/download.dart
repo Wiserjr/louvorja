@@ -135,6 +135,24 @@ class Download {
   Future<bool> jaBaixado(String caminhoRelativo) async =>
       (await arquivoDe(caminhoRelativo)).exists();
 
+  /// Caminho relativo (`musics/pt/Álbum/Faixa.mp3`) de um valor vindo da API.
+  ///
+  /// A API já devolveu `/musics/pt/...` e hoje devolve a URL inteira
+  /// (`https://files.louvorja.com.br/musics/pt/...`). O catálogo e o download
+  /// trabalham só com o caminho: guardar a URL faria o app pedir
+  /// `/file/https%3A%2F%2F...`, que o servidor responde com 404.
+  static String? caminhoDaApi(Object? valor) {
+    if (valor is! String) return null;
+    var c = valor.trim().replaceFirst(
+      RegExp(r'^[a-z][a-z0-9+.-]*://[^/]*', caseSensitive: false),
+      '',
+    );
+    while (c.startsWith('/')) {
+      c = c.substring(1);
+    }
+    return c.isEmpty ? null : c;
+  }
+
   Uri _urlDe(String base, String caminho) => Uri.parse(
     '$base/file/${caminho.split('/').map(Uri.encodeComponent).join('/')}',
   );
@@ -189,8 +207,7 @@ class Download {
       await _corpo(Uri.parse('$base/json_db/music_$idMusica')),
     ) as Map<String, dynamic>;
     final campo = instrumental ? 'url_instrumental_music' : 'url_music';
-    final v = json[campo];
-    return (v is String && v.isNotEmpty) ? v : null;
+    return caminhoDaApi(json[campo]);
   }
 
   /// Baixa o áudio de [idMusica], gravando em [caminhoRelativoLocal].

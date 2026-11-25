@@ -42,12 +42,8 @@ class Sincronizacao {
   Future<List<dynamic>> _jsonLista(String chave) async =>
       (await _json(chave))['_lista'] as List<dynamic>;
 
-  /// Remove a barra inicial: a API devolve `/musics/pt/...`, o catálogo guarda
-  /// `musics/pt/...`.
-  static String? _caminho(Object? v) {
-    if (v is! String || v.isEmpty) return null;
-    return v.startsWith('/') ? v.substring(1) : v;
-  }
+  /// Caminho relativo de um campo `url_*` da API (ver [Download.caminhoDaApi]).
+  static String? _caminho(Object? v) => Download.caminhoDaApi(v);
 
   static int _ms(Object? v) {
     if (v is! String) return 0;
